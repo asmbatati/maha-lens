@@ -1,0 +1,12 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.vscode/
+.idea/
+
+# build / deps (none used, but guard anyway)
+node_modules/
+dist/
+.vite/
