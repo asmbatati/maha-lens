@@ -8,10 +8,15 @@ A buildless, bilingual (English ⇄ Arabic / RTL) single-page site with a scroll
 ## Stack
 
 - Plain **HTML + CSS + ES modules** — no build step.
-- [GSAP](https://gsap.com/) 3.12 + ScrollTrigger — clip-path image reveals.
-- [Lenis](https://lenis.darkroom.engineering/) 1.1 — smooth scroll, drives the hero Ken-Burns scrub.
-- Cormorant Garamond + Jost + Amiri (Arabic).
-- Palette: `#edafb8 · #f7e1d7 · #dedbd2 · #b0c4b1 · #4a5759`.
+- **Supabase CMS** — photos/collections/copy hydrate from Supabase (`js/remote.js`, `data.js` fallback); `admin.html` is Maha's phone-first panel (RLS-locked writes, EXIF-stripping + auto-orienting webp uploads, suspendable sections).
+- **Per-section moods** — silk `#cb997e` with falling flacons (Product), sage `#6b705c` with tumbling fruit (Gourmet), cream `#fff9eb` with petals (Nature), sand `#ddbea9` with floating calligraphy (Architecture), velvet bokeh (Coverage) — plus a themed companion line weaving through each stream with a traveler that rides the scroll.
+- **Raw WebGL hero reel** (`js/heroshow.js`) — liquid-displacement crossfades between her photographs, cover-fit + in-shader Ken-Burns, `<img>` crossfade fallback. The page rises over the pinned hero behind a **curved curtain edge** (savor.it-style).
+- **Wavy spotlight streams** — each collection is a column of photos drifting on three layered sine waves with clip-path reveals (GSAP ScrollTrigger per image, config in `WAVE`).
+- **Celestial layer** (`js/celestial.js`) — glitter twinkles, four-point glints, and falling stars **behind the photos** (sticky canvas inside the page body); camera-flash accents on load / slide change / lightbox.
+- [GSAP](https://gsap.com/) 3.12 + ScrollTrigger + [Lenis](https://lenis.darkroom.engineering/) 1.1 — smooth scroll, progress bar, velocity-leaning marquee, giant letter-built closing logotype.
+- **Gloock** display serif, glowing like the stars (em-scaled layered text-shadow) + Archivo · Amiri + Alexandria (Arabic).
+- Candlelight-dark aesthetic: espresso `#0f0c0a`, champagne gold `#d9a95f`, warm ivory, brand blush `#edafb8`.
+- Accessible lightbox (keyboard, RTL-aware arrows, swipe, focus trap), bilingual marquee.
 
 ## Run locally
 

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>لوحة مها — Maha Lens Admin</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Alexandria:wght@300;400;500;600&display=swap">
+  <style>
+    :root { --bg:#0f0c0a; --card:#1a1410; --ivory:#f4ecdf; --gold:#d9a95f; --dim:#96897a; --line:rgba(244,236,223,.14); --ok:#8fbb8f; --bad:#d98080; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Alexandria', sans-serif; font-weight: 300; background: var(--bg); color: var(--ivory); min-height: 100svh; padding-bottom: 4rem; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.2rem; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: rgba(15,12,10,.92); backdrop-filter: blur(8px); z-index: 5; }
+    h1 { font-family: 'Gloock', serif; font-size: 1.25rem; font-weight: 400; }
+    h1 b { color: var(--gold); font-weight: 400; }
+    main { max-width: 760px; margin: 0 auto; padding: 1.2rem; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 1.1rem; margin-bottom: 1rem; }
+    label { display: block; font-size: .8rem; color: var(--dim); margin: .6rem 0 .25rem; }
+    input[type=text], input[type=email], input[type=password], textarea, select {
+      width: 100%; padding: .65em .8em; border-radius: 9px; border: 1px solid var(--line);
+      background: #241c15; color: var(--ivory); font: inherit; font-size: .95rem; }
+    textarea { min-height: 4.2em; resize: vertical; }
+    input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+    .ltr { direction: ltr; text-align: left; }
+    button { font: inherit; cursor: pointer; border: 0; border-radius: 9px; padding: .6em 1.1em; background: var(--gold); color: #14100c; font-weight: 500; }
+    button.ghost { background: transparent; color: var(--ivory); border: 1px solid var(--line); }
+    button.danger { background: transparent; color: var(--bad); border: 1px solid rgba(217,128,128,.4); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .row { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
+    .tabs { display: flex; gap: .5rem; margin: 1rem 0; }
+    .tabs button { background: transparent; color: var(--dim); border: 1px solid var(--line); flex: 1; }
+    .tabs button.on { background: var(--gold); color: #14100c; border-color: var(--gold); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .8rem; }
+    .ph { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    .ph img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; opacity: .95; }
+    .ph.off img { opacity: .3; filter: grayscale(.7); }
+    .ph .pad { padding: .6rem; }
+    .ph .t { font-size: .85rem; margin-bottom: .1rem; }
+    .ph .t2 { font-size: .75rem; color: var(--dim); direction: ltr; text-align: left; }
+    .ph .row { margin-top: .5rem; }
+    .ph button { padding: .35em .7em; font-size: .78rem; }
+    .msg { font-size: .85rem; margin-top: .6rem; min-height: 1.2em; }
+    .msg.ok { color: var(--ok); } .msg.bad { color: var(--bad); }
+    .note { font-size: .78rem; color: var(--dim); line-height: 1.7; }
+    .gate { display: flex; gap: .6rem; align-items: flex-start; background: rgba(217,169,95,.08); border: 1px solid rgba(217,169,95,.35); border-radius: 10px; padding: .7rem .8rem; margin: .8rem 0; font-size: .82rem; line-height: 1.7; }
+    .gate input { margin-top: .3em; width: 1.05em; height: 1.05em; }
+    .hidden { display: none !important; }
+    progress { width: 100%; height: 6px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Maha <b>Lens</b> · لوحة التحكم</h1>
+    <button id="signOut" class="ghost hidden">خروج</button>
+  </header>
+  <main>
+    <!-- AUTH -->
+    <section id="authView" class="card">
+      <p class="note">تسجيل الدخول بحساب المشرفة. الكتابة مسموحة فقط لبريد مها والمشرف (محميّة بسياسات قاعدة البيانات).</p>
+      <label>البريد الإلكتروني</label>
+      <input id="email" type="email" class="ltr" autocomplete="email" placeholder="you@example.com">
+      <label>كلمة المرور</label>
+      <input id="password" type="password" class="ltr" autocomplete="current-password" placeholder="••••••••">
+      <div class="row" style="margin-top:.9rem">
+        <button id="signIn">دخول</button>
+        <button id="signUp" class="ghost">إنشاء حساب</button>
+      </div>
+      <p id="authMsg" class="msg"></p>
+    </section>
+
+    <!-- APP -->
+    <section id="appView" class="hidden">
+      <div class="tabs">
+        <button data-tab="photos" class="on">الصور</button>
+        <button data-tab="sections">الأقسام</button>
+        <button data-tab="copy">النصوص</button>
+      </div>
+
+      <!-- PHOTOS -->
+      <div id="tab-photos">
+        <div class="card">
+          <label>القسم</label>
+          <select id="collPick"></select>
+          <div class="gate">
+            <input type="checkbox" id="gateChk">
+            <span>أؤكد أنه <b>لا يظهر في الصورة أيّ أشخاص</b> (القاعدة الثابتة). تُحذف بيانات الموقع والكاميرا (EXIF) تلقائيًا عند الرفع، ويُصحَّح اتجاه الصورة تلقائيًا.</span>
+          </div>
+          <label>صورة جديدة</label>
+          <input id="file" type="file" accept="image/*" disabled>
+          <label>العنوان (عربي)</label>
+          <input id="newTitleAr" type="text" placeholder="مثال: غروب">
+          <label>Title (English)</label>
+          <input id="newTitleEn" type="text" class="ltr" placeholder="e.g. Sunset">
+          <div class="row" style="margin-top:.9rem">
+            <button id="upload" disabled>رفع الصورة</button>
+            <progress id="upProg" class="hidden" max="100" value="0"></progress>
+          </div>
+          <p id="upMsg" class="msg"></p>
+        </div>
+        <div id="photoGrid" class="grid"></div>
+      </div>
+
+      <!-- SECTIONS -->
+      <div id="tab-sections" class="hidden"></div>
+
+      <!-- COPY -->
+      <div id="tab-copy" class="hidden"></div>
+    </section>
+  </main>
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>
