@@ -95,7 +95,16 @@ function initHero() {
 }
 
 /* ── wavy spotlight streams ── */
-const WAVE = { clipMax: 24, clipPower: 2.2 };   // reveal mask; motion lives in buildWave()
+/* CodeGrid reference config — exact values from the source */
+const CONFIG = {
+  waves: {
+    base:   { amp: 0.1,   freq: 1.0, speed: 1.0, phase: 5.0 },
+    flow:   { amp: 0.15,  freq: 5.0, speed: 5.0, phase: 10.0 },
+    detail: { amp: 0.025, freq: 5.0, speed: 1.5, phase: 2.5 },
+  },
+  clipMax: 20,
+  clipPower: 2,
+};
 const BASE_H = 375;
 let ORDER = [];
 let sectionSkies = [];
@@ -139,49 +148,48 @@ function updateSpotlightSizes() {
   const sizeFactor = Math.min(innerWidth / 750, 1);
   $$(".sp-item").forEach(item => {
     const ar = +item.dataset.ar, k = +item.dataset.k, n = +item.dataset.n;
-    let h = BASE_H * (ar < 1 ? 1.3 : 1) * sizeFactor;
-    const shrinkStart = Math.ceil(n * 0.75);
-    if (k >= shrinkStart && n > shrinkStart) {
-      h *= 1 - 0.45 * ((k - shrinkStart + 1) / (n - shrinkStart));
-    }
+    // reference shrink: the last quarter of each stream tapers down to 50%
+    const shrinkStart = Math.floor(n * 0.75);
+    const shrinkFactor = (n >= 4 && k >= shrinkStart)
+      ? (k - shrinkStart + 1) / (n - shrinkStart) : 0;
+    const h = BASE_H * (ar < 1 ? 1.3 : 1) * sizeFactor * (1 - shrinkFactor * 0.5);
     const w = h * ar;
     item.style.height = `${Math.round(h)}px`;
     item.style.width = `${Math.round(w)}px`;
     const img = item.querySelector("img");
     if (img) img.sizes = `${Math.ceil(w)}px`;
   });
-  // per-stream rhythm unit: the average photo height (photos touch, gap 0)
-  $$(".collection").forEach(sec => {
-    const items = $$(".sp-item", sec);
-    if (!items.length) return;
-    const step = items.reduce((s, it) => s + it.offsetHeight, 0) / items.length;
-    items.forEach(it => { it.dataset.step = Math.max(120, Math.round(step)); });
-  });
 }
-/* Focus-centered wave: the photo at scroll level sits DEAD CENTER; its
-   neighbours step out 40% / 80% / partly off-screen (20vw per step), sides
-   alternating by index and mirrored per section. Every photo's own journey:
-   slides in from its side, locks to center at focus, slides out again. */
+/* CodeGrid reference wave — three layered sines drive each photo's drift as
+   it travels the viewport; a centered clip mask reveals it toward the middle
+   of its journey. Faithful port: only our real aspect ratios, the per-section
+   mirror, and RTL awareness are added on top. */
 function buildWave() {
   if (reduced) return;
   $$(".sp-item").forEach(item => {
     if (item.__w) return; item.__w = 1;
-    const k = +item.dataset.k;
-    const dirSign = +item.dataset.dir || 1;
-    const side = (k % 2 ? 1 : -1) * dirSign;
-    const apply = p => {
-      const vw = innerWidth, vh = innerHeight;
-      const w = item.offsetWidth, h = item.offsetHeight;
-      const center = (vw - w) / 2;
-      const step = +item.dataset.step || h || 320;
-      const d = Math.abs((0.5 - p) * (vh + h) / step);   // distance from focus, in photos
-      let off = Math.min(d, 3.4) * 0.20 * vw * side;     // 0% → 40% → 80% → out
-      off += Math.sin(k * 6.8 + p * 2.7) * 0.015 * vw;   // organic wobble
-      const maxOff = vw / 2 + 0.32 * w;                  // always keep ≥18% visible
-      off = Math.max(-maxOff, Math.min(off, maxOff));
-      const clip = Math.pow(Math.abs(p - 0.5) * 2, WAVE.clipPower) * WAVE.clipMax;
-      item.style.translate = `${center + off}px 0`;
-      item.style.clipPath = `inset(0 ${clip}% 0 ${clip}%)`;
+    const k = +item.dataset.k, n = +item.dataset.n;
+    const normalizedIndex = n > 1 ? k / (n - 1) : 0;
+    const mirror = +item.dataset.dir || 1;         // direction flips section to section
+    const apply = progress => {
+      const { base, flow, detail } = CONFIG.waves;
+      const vw = innerWidth;
+      const baseWave = Math.sin(
+        normalizedIndex * base.freq + (1 - progress) * base.speed + base.phase);
+      const flowWave = 0.5 + Math.sin(
+        normalizedIndex * flow.freq + flow.phase + progress * flow.speed);
+      const detailWave = 0.5 + Math.sin(
+        normalizedIndex * detail.freq + detail.phase + progress * detail.speed);
+      const drift = -vw * 0.1
+        + baseWave * vw * base.amp
+        + flowWave * vw * flow.amp
+        + detailWave * vw * detail.amp;
+      const dir = mirror * (rtl() ? -1 : 1);
+      const translateX = (vw - item.offsetWidth) / 2 + drift * dir;
+      const centerOffset = Math.abs(progress - 0.5) * 2;
+      const clipAmount = Math.pow(centerOffset, CONFIG.clipPower) * CONFIG.clipMax;
+      item.style.translate = `${translateX}px`;
+      item.style.clipPath = `inset(0 ${clipAmount}% 0 ${clipAmount}%)`;
     };
     ST.create({
       trigger: item, start: "top bottom", end: "bottom top",
