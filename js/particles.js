@@ -16,11 +16,30 @@ const TONES = {
 };
 const rnd = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
+/* roundRect is missing on older iOS Safari — fall back to a plain rect */
+const rrect = (ctx, x, y, w, h, r) =>
+  ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h);
+
+/* generated 3D sprites (text-prompt-only, reviewed; vector art is the fallback) */
+const SPRITES = { flacons: "img/fx/flacon.png", fruits: "img/fx/citrus.png", callig: "img/fx/meem.png" };
 
 export function initParticles(canvas, { mode = "stars", reduced = false, host = null } = {}) {
   if (reduced || !canvas) return { flashStar: () => {}, destroy: () => {} };
   const ctx = canvas.getContext("2d");
   let W = 0, H = 0, dead = false, running = !host;
+  let sprite = null;
+  if (SPRITES[mode]) {
+    const im = new Image();
+    im.onload = () => { sprite = im; };
+    im.src = `${SPRITES[mode]}?v=6`;
+  }
+  function drawSprite(x, y, size, rot, squash, alpha) {
+    const h = size, w = h * (sprite.width / sprite.height);
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(squash, 1);
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(sprite, -w / 2, -h / 2, w, h);
+    ctx.restore(); ctx.globalAlpha = 1;
+  }
 
   function resize() {
     const dpr = Math.min(devicePixelRatio || 1, 2);
@@ -133,6 +152,10 @@ export function initParticles(canvas, { mode = "stars", reduced = false, host = 
         const { x, y } = fallXY(p, t);
         const squash = 0.42 + 0.58 * Math.abs(Math.sin(p.ph + t * p.spin));  // 3D-ish spin
         const s = p.s * p.depth;
+        if (sprite) {   // generated 3D flacon render
+          drawSprite(x, y, s * 2.4, Math.sin(p.ph + t * p.rv) * 0.35, squash, 0.55 + 0.4 * p.depth);
+          continue;
+        }
         ctx.save(); ctx.translate(x, y); ctx.rotate(Math.sin(p.ph + t * p.rv) * 0.35);
         ctx.scale(squash, 1);
         const a = 0.5 * p.depth;
@@ -142,10 +165,10 @@ export function initParticles(canvas, { mode = "stars", reduced = false, host = 
         g.addColorStop(0.45, `rgba(120,76,40,${a * 0.8})`);
         g.addColorStop(1, `rgba(48,28,14,${a})`);
         ctx.fillStyle = g;
-        ctx.beginPath(); ctx.roundRect(-s * 0.45, -s * 0.5, s * 0.9, s, s * 0.16); ctx.fill();
+        ctx.beginPath(); rrect(ctx, -s * 0.45, -s * 0.5, s * 0.9, s, s * 0.16); ctx.fill();
         // gold cap
         ctx.fillStyle = `rgba(217,169,95,${(0.85 * p.depth).toFixed(3)})`;
-        ctx.beginPath(); ctx.roundRect(-s * 0.16, -s * 0.78, s * 0.32, s * 0.3, s * 0.06); ctx.fill();
+        ctx.beginPath(); rrect(ctx, -s * 0.16, -s * 0.78, s * 0.32, s * 0.3, s * 0.06); ctx.fill();
         // specular line
         ctx.strokeStyle = `rgba(255,244,222,${(0.5 * p.depth).toFixed(3)})`;
         ctx.lineWidth = 1;
@@ -158,6 +181,10 @@ export function initParticles(canvas, { mode = "stars", reduced = false, host = 
         const { x, y } = fallXY(p, t);
         const s = p.s * p.depth, rot = p.rot + t * p.rv;
         const squash = 0.55 + 0.45 * Math.abs(Math.sin(p.ph + t * p.spin));
+        if (sprite && p.kind !== "berry") {   // generated citrus render (berries stay vector)
+          drawSprite(x, y, s * 2.4, rot, squash, 0.6 + 0.35 * p.depth);
+          continue;
+        }
         ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(squash, 1);
         const a = 0.75 * p.depth;
         if (p.kind === "berry") {
@@ -190,6 +217,10 @@ export function initParticles(canvas, { mode = "stars", reduced = false, host = 
         const { x, y } = fallXY(p, t);
         const flip = Math.sin(p.ph + t * p.spin);           // rotateY illusion
         const s = p.s * p.depth;
+        if (sprite && p.ch === "م") {   // the golden meem gets its 3D render
+          drawSprite(x, y, s * 1.7, Math.sin(p.ph + t * p.rv * 0.6) * 0.25, Math.max(0.18, Math.abs(flip)), 0.5 + 0.4 * p.depth);
+          continue;
+        }
         ctx.save(); ctx.translate(x, y);
         ctx.rotate(Math.sin(p.ph + t * p.rv * 0.6) * 0.25);
         ctx.scale(Math.max(0.18, Math.abs(flip)), 1);

@@ -95,12 +95,7 @@ function initHero() {
 }
 
 /* ── wavy spotlight streams ── */
-const WAVE = {
-  base:   { amplitude: 0.10,  frequency: 2.1, speed: 0.85, phase: 0.4 },
-  flow:   { amplitude: 0.22,  frequency: 3.3, speed: 1.55, phase: 1.1 },
-  detail: { amplitude: 0.035, frequency: 6.8, speed: 2.7,  phase: 2.1 },
-  clipMax: 24, clipPower: 2.2,
-};
+const WAVE = { clipMax: 24, clipPower: 2.2 };   // reveal mask; motion lives in buildWave()
 const BASE_H = 375;
 let ORDER = [];
 let sectionSkies = [];
@@ -108,7 +103,7 @@ let sectionSkies = [];
 function figure(p, i, coll, k, n, dirSign) {
   const f = el("figure", "sp-item");
   f.dataset.index = ORDER.length; f.dataset.k = k; f.dataset.n = n; f.dataset.ar = p.ar;
-  f.dataset.dir = dirSign; if (k === 0) f.dataset.first = "1";
+  f.dataset.dir = dirSign;
   f.tabIndex = 0; f.setAttribute("role", "button"); f.setAttribute("aria-haspopup", "dialog");
   f.setAttribute("aria-label", `${pick(p, "title")} — ${T().view}`);
   f.innerHTML = `<img src="${p.s1280}" srcset="${srcsetOf(p)}" sizes="640px"
@@ -155,34 +150,37 @@ function updateSpotlightSizes() {
     const img = item.querySelector("img");
     if (img) img.sizes = `${Math.ceil(w)}px`;
   });
+  // per-stream rhythm unit: the average photo height (photos touch, gap 0)
+  $$(".collection").forEach(sec => {
+    const items = $$(".sp-item", sec);
+    if (!items.length) return;
+    const step = items.reduce((s, it) => s + it.offsetHeight, 0) / items.length;
+    items.forEach(it => { it.dataset.step = Math.max(120, Math.round(step)); });
+  });
 }
+/* Focus-centered wave: the photo at scroll level sits DEAD CENTER; its
+   neighbours step out 40% / 80% / partly off-screen (20vw per step), sides
+   alternating by index and mirrored per section. Every photo's own journey:
+   slides in from its side, locks to center at focus, slides out again. */
 function buildWave() {
   if (reduced) return;
   $$(".sp-item").forEach(item => {
     if (item.__w) return; item.__w = 1;
-    const k = +item.dataset.k, n = +item.dataset.n;
+    const k = +item.dataset.k;
     const dirSign = +item.dataset.dir || 1;
-    const damp = item.dataset.first ? 0.32 : 1;          // first photo hugs the middle
-    const norm = n > 1 ? k / (n - 1) : 0;
+    const side = (k % 2 ? 1 : -1) * dirSign;
     const apply = p => {
-      const vw = innerWidth, w = item.offsetWidth;
+      const vw = innerWidth, vh = innerHeight;
+      const w = item.offsetWidth, h = item.offsetHeight;
       const center = (vw - w) / 2;
-      const { base: b, flow: f, detail: d } = WAVE;
-      const bv = Math.sin(norm * b.frequency + (1 - p) * b.speed + b.phase);
-      const fv = Math.sin(norm * f.frequency + p * f.speed + f.phase) + 0.5;
-      const dv = Math.sin(norm * d.frequency + p * d.speed + d.phase);
-      const mobile = vw < 750;                     // phones: gentle drift, no lean
-      const mScale = mobile ? 0.42 : 1;
-      const nudge = mobile ? 0 : (rtl() ? 0.10 : -0.10) * vw * dirSign * damp;
-      let x = center + nudge
-        + (bv * b.amplitude + fv * f.amplitude + dv * d.amplitude) * vw * dirSign * damp * mScale;
-      const k = Math.min(p / 0.35, 1);             // every photo ENTERS on the midline…
-      x = center + (x - center) * k * k * (3 - 2 * k); // …then eases out into the wave
-      const margin = vw * 0.02;                    // and never leaves the screen
-      const lo = Math.min(margin, center), hi = Math.max(vw - w - margin, center);
-      x = Math.max(lo, Math.min(x, hi));
+      const step = +item.dataset.step || h || 320;
+      const d = Math.abs((0.5 - p) * (vh + h) / step);   // distance from focus, in photos
+      let off = Math.min(d, 3.4) * 0.20 * vw * side;     // 0% → 40% → 80% → out
+      off += Math.sin(k * 6.8 + p * 2.7) * 0.015 * vw;   // organic wobble
+      const maxOff = vw / 2 + 0.32 * w;                  // always keep ≥18% visible
+      off = Math.max(-maxOff, Math.min(off, maxOff));
       const clip = Math.pow(Math.abs(p - 0.5) * 2, WAVE.clipPower) * WAVE.clipMax;
-      item.style.translate = `${x}px 0`;
+      item.style.translate = `${center + off}px 0`;
       item.style.clipPath = `inset(0 ${clip}% 0 ${clip}%)`;
     };
     ST.create({
@@ -192,15 +190,6 @@ function buildWave() {
     });
   });
 }
-function buildBlooms() {
-  if (reduced) return;
-  $$('.sp-item[data-first="1"]').forEach(item => {
-    if (item.__bl) return; item.__bl = 1;
-    gsap.from(item, { scale: 0.62, opacity: 0, duration: 1.1, ease: "power3.out",
-      scrollTrigger: { trigger: item, start: "top 82%" } });
-  });
-}
-
 /* ── scroll companion line per section: a themed path weaving between the
    photos, drawn in as you scroll, with a traveler gliding along it ── */
 const LINE_STYLES = {
@@ -297,7 +286,6 @@ function applyLang() {
   slideLabel(curSlide);
   renderWork();
   buildWave();
-  buildBlooms();
   buildSectionLines();
   buildCollHeadReveals();
   bindCursor();
@@ -429,7 +417,6 @@ function buildReveals() {
     gsap.to(spans, { y: "0%", duration: 0.9, stagger: 0.018, ease: "power3.out", scrollTrigger: { trigger: node, start: "top 84%" } });
   });
   buildWave();
-  buildBlooms();
   buildSectionLines();
   buildCollHeadReveals();
 }
