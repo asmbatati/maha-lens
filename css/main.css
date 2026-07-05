@@ -112,7 +112,8 @@ a, button { touch-action: manipulation; }
 .nav-links a::after { content: ''; position: absolute; inset-inline-start: 0; bottom: -4px; width: 0; height: 1px; background: var(--gold); transition: width .4s var(--ease); }
 .nav-links a:hover::after { width: 100%; }
 .nav-links a:hover { color: var(--gold); transition: color .3s; }
-.lang { font-family: var(--sans); font-size: .8rem; border: 1px solid rgba(244,236,223,.4); border-radius: 99px; width: 30px; height: 30px; display: grid; place-items: center; transition: background .3s, color .3s, border-color .3s; }
+.lang { font-family: var(--sans); font-size: .82rem; border: 1px solid rgba(244,236,223,.4); border-radius: 99px; padding: .34em .8em; display: inline-flex; align-items: center; gap: .4em; flex-shrink: 0; transition: background .3s, color .3s, border-color .3s; }
+.lang svg { flex-shrink: 0; }
 .lang:hover { background: var(--ivory); color: var(--bg); border-color: var(--ivory); }
 
 /* ── hero (pinned; the page rises over it) ── */
@@ -296,9 +297,11 @@ html.lb-open, html.lb-open body { overflow: hidden; }
 
 /* ── responsive ── */
 @media (max-width: 860px) {
-  .nav-links { gap: 1.05rem; font-size: .74rem; }
-  .nav-links a { padding: .5em .15em; }        /* honest thumb targets */
-  .lang { width: 40px; height: 40px; font-size: .92rem; }
+  .nav { padding: 0 1rem; }
+  .nav-links { gap: .8rem; font-size: .72rem; flex-wrap: nowrap; }
+  .nav-links a { padding: .5em .1em; }         /* honest thumb targets */
+  .lang { padding: .5em .85em; font-size: .88rem; }   /* the globe pill stays visible */
+  .nav .brand-mark { height: 26px; }
   .nav .brand-word { display: none; }
   .hero-ui { bottom: 132px; }
   .hero-title { font-size: clamp(3.2rem, 15vw, 5.5rem); }

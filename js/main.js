@@ -185,7 +185,11 @@ function buildWave() {
         + flowWave * vw * flow.amp
         + detailWave * vw * detail.amp;
       const dir = mirror * (rtl() ? -1 : 1);
-      const translateX = (vw - item.offsetWidth) / 2 + drift * dir;
+      // fit: shrink the drift just enough that this photo stays fully on-screen
+      // (bites only when the photo is wide relative to the viewport, i.e. phones)
+      const slack = Math.max(0, (vw - item.offsetWidth) / 2 - vw * 0.015);
+      const fit = Math.min(1, slack / (vw * 0.24));
+      const translateX = (vw - item.offsetWidth) / 2 + drift * dir * fit;
       const centerOffset = Math.abs(progress - 0.5) * 2;
       const clipAmount = Math.pow(centerOffset, CONFIG.clipPower) * CONFIG.clipMax;
       item.style.translate = `${translateX}px`;
@@ -249,14 +253,26 @@ function buildSectionLines() {
     const path = svg.querySelector(".sec-path"), trav = svg.querySelector(".sec-traveler");
     const len = path.getTotalLength();
     path.style.strokeDasharray = len;
+    // The traveler is locked to the SCROLL, not the path length: it always sits
+    // where the viewport is, weaving left-right — never racing ahead of you.
+    const N = 240, samples = [];
+    for (let i = 0; i <= N; i++) samples.push({ l: len * i / N, y: path.getPointAtLength(len * i / N).y });
+    const yToLen = y => {
+      let lo = 0, hi = N;
+      while (lo < hi) { const m = (lo + hi) >> 1; samples[m].y < y ? lo = m + 1 : hi = m; }
+      return samples[lo].l;
+    };
     const apply = p => {
-      path.style.strokeDashoffset = len * (1 - p);
-      const pt = path.getPointAtLength(len * Math.min(Math.max(p, 0.001), 1));
+      const vh = innerHeight;
+      const targetY = Math.max(0, Math.min(H, p * (H + vh) - vh * 0.45));
+      const L = yToLen(targetY);
+      path.style.strokeDashoffset = len - L;
+      const pt = path.getPointAtLength(L);
       trav.setAttribute("transform", `translate(${pt.x.toFixed(1)},${pt.y.toFixed(1)})`);
-      trav.style.opacity = p > 0.005 && p < 0.995 ? 1 : 0;
+      trav.style.opacity = L > 2 && L < len - 2 ? 1 : 0;
     };
     apply(0);
-    ST.create({ trigger: sec, start: "top 72%", end: "bottom bottom",
+    ST.create({ trigger: sec, start: "top bottom", end: "bottom top",
       onUpdate: s => apply(s.progress), onRefresh: s => apply(s.progress) });
   });
 }
