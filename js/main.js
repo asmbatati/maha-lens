@@ -165,14 +165,22 @@ function buildWave() {
     const damp = item.dataset.first ? 0.32 : 1;          // first photo hugs the middle
     const norm = n > 1 ? k / (n - 1) : 0;
     const apply = p => {
-      const vw = innerWidth;
+      const vw = innerWidth, w = item.offsetWidth;
+      const center = (vw - w) / 2;
       const { base: b, flow: f, detail: d } = WAVE;
       const bv = Math.sin(norm * b.frequency + (1 - p) * b.speed + b.phase);
       const fv = Math.sin(norm * f.frequency + p * f.speed + f.phase) + 0.5;
       const dv = Math.sin(norm * d.frequency + p * d.speed + d.phase);
-      const nudge = (rtl() ? 0.10 : -0.10) * vw * dirSign * damp;
-      const x = (vw - item.offsetWidth) / 2 + nudge
-        + (bv * b.amplitude + fv * f.amplitude + dv * d.amplitude) * vw * dirSign * damp;
+      const mobile = vw < 750;                     // phones: gentle drift, no lean
+      const mScale = mobile ? 0.42 : 1;
+      const nudge = mobile ? 0 : (rtl() ? 0.10 : -0.10) * vw * dirSign * damp;
+      let x = center + nudge
+        + (bv * b.amplitude + fv * f.amplitude + dv * d.amplitude) * vw * dirSign * damp * mScale;
+      const k = Math.min(p / 0.35, 1);             // every photo ENTERS on the midline…
+      x = center + (x - center) * k * k * (3 - 2 * k); // …then eases out into the wave
+      const margin = vw * 0.02;                    // and never leaves the screen
+      const lo = Math.min(margin, center), hi = Math.max(vw - w - margin, center);
+      x = Math.max(lo, Math.min(x, hi));
       const clip = Math.pow(Math.abs(p - 0.5) * 2, WAVE.clipPower) * WAVE.clipMax;
       item.style.translate = `${x}px 0`;
       item.style.clipPath = `inset(0 ${clip}% 0 ${clip}%)`;
