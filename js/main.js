@@ -441,7 +441,10 @@ function buildCollHeadReveals() {
       scrollTrigger: { trigger: head, start: "top 84%" } });
   });
 }
+let __revealed = false;
 function buildReveals() {
+  if (__revealed) return;        // run-once: safe to call from dismiss AND the safety net
+  __revealed = true;
   if (!reduced) {
     const chars = [...splitChars($(".hero-title .l1")), ...splitChars($(".hero-title .l2"))];
     gsap.from(chars, { yPercent: 74, opacity: 0, duration: 0.7, stagger: 0.032, ease: "power3.out" });
@@ -549,10 +552,14 @@ async function start() {
     buildReveals();
     return;
   }
+  const forceHide = () => { const l = $("#loader"); if (l) { l.style.display = "none"; } $("#introVid")?.pause(); buildReveals(); };
+  // hard safety net — plain setTimeout (not GSAP/rAF): the loader can NEVER trap the site,
+  // whatever the intro video, CDN, or animation engine does.
+  setTimeout(forceHide, 5000);
   const dismiss = () => {
     const tl = gsap.timeline();
     tl.add(() => flash(0.85))
-      .to("#loader", { autoAlpha: 0, duration: 0.55, onComplete: () => { $("#loader").style.display = "none"; $("#introVid")?.pause(); } })
+      .to("#loader", { autoAlpha: 0, duration: 0.55, onComplete: forceHide })
       .add(buildReveals, "<0.1");
   };
   const introVid = $("#introVid");
@@ -569,4 +576,9 @@ async function start() {
     gsap.to(".ld-bar i", { width: "100%", duration: seen ? 0.25 : 0.55, ease: "power2.inOut", onComplete: dismiss });
   }
 }
-if (document.readyState === "complete") start(); else addEventListener("load", start);
+/* Run as soon as the DOM is ready — NOT on window "load". main.js is a deferred
+   module, so the DOM is already parsed here; gating on "load" would wait for every
+   resource (incl. the intro video), which can stall indefinitely on a CDN and leave
+   the loader stuck. start() needs only the DOM + GSAP/Lenis, all ready by now. */
+if (document.readyState === "loading") addEventListener("DOMContentLoaded", start);
+else start();
