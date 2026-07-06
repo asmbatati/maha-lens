@@ -2,10 +2,10 @@
    curtain, wavy sine-driven photo streams, themed particle skies per section,
    radial camera hub, bilingual EN/AR with RTL, lightbox, custom cursor.
    Content is hydrated from Supabase (admin.html) with data.js as fallback. */
-import { PHOTOS, COLLECTIONS, SRC, REALW, I18N, SLIDES } from "./data.js?v=7";
-import { initHeroShow } from "./heroshow.js?v=7";
-import { initParticles } from "./particles.js?v=7";
-import { loadRemote } from "./remote.js?v=7";
+import { PHOTOS, COLLECTIONS, SRC, REALW, I18N, SLIDES } from "./data.js?v=8";
+import { initHeroShow } from "./heroshow.js?v=8";
+import { initParticles } from "./particles.js?v=8";
+import { loadRemote } from "./remote.js?v=8";
 
 const gsap = window.gsap, ST = window.ScrollTrigger;
 gsap.registerPlugin(ST);
@@ -531,50 +531,52 @@ const lightbox = (() => {
   return { isOpen: () => !box.hidden, refresh: show };
 })();
 
-/* ── start ── */
-async function start() {
-  $("#yr").textContent = new Date().getFullYear();
-  const remote = await loadRemote();
-  if (remote) {
-    DBP = remote.photos.map(normPhoto);
-    DBC = remote.collections.map(c => ({ id: c.id, n: c.n, en: c.en, ar: c.ar, lead_en: c.lead_en, lead_ar: c.lead_ar }));
-    remote.copy.forEach(row => {
-      if (row.en) I18N.en[row.key] = row.en;
-      if (row.ar) I18N.ar[row.key] = row.ar;
-    });
-  }
-  buildMarquee(); applyLang(); initHero();
+/* ── loader dismissal — plain CSS class + setTimeout, ZERO gsap/rAF dependency,
+   so tab-visibility changes, jank, or a dead animation engine can never trap it ── */
+let _revealed = false;
+function revealSite() {
+  if (_revealed) return; _revealed = true;
+  const loader = $("#loader");
+  if (loader) { loader.classList.add("dismiss"); setTimeout(() => { loader.style.display = "none"; }, 700); }
+  $("#introVid")?.pause();
+  buildReveals();
+}
+function playIntroThenReveal() {
   let seen = false;
   try { seen = sessionStorage.getItem("seen") === "1"; sessionStorage.setItem("seen", "1"); } catch (e) {}
-  if (document.hidden) {
-    gsap.set("#loader", { autoAlpha: 0 });
-    $("#loader").style.display = "none";
-    buildReveals();
-    return;
-  }
-  const forceHide = () => { const l = $("#loader"); if (l) { l.style.display = "none"; } $("#introVid")?.pause(); buildReveals(); };
-  // hard safety net — plain setTimeout (not GSAP/rAF): the loader can NEVER trap the site,
-  // whatever the intro video, CDN, or animation engine does.
-  setTimeout(forceHide, 5000);
-  const dismiss = () => {
-    const tl = gsap.timeline();
-    tl.add(() => flash(0.85))
-      .to("#loader", { autoAlpha: 0, duration: 0.55, onComplete: forceHide })
-      .add(buildReveals, "<0.1");
-  };
-  const introVid = $("#introVid");
-  // First visit → the lens-aperture cinematic opens onto the site (the brand metaphor)
-  if (!seen && !reduced && introVid) {
-    $("#loader").classList.add("cinematic");
-    gsap.to(".ld-bar i", { width: "100%", duration: 3.0, ease: "power1.inOut" });
-    let done = false; const go = () => { if (done) return; done = true; dismiss(); };
+  const loader = $("#loader"), introVid = $("#introVid");
+  // absolute guarantee — the loader is gone within 6s no matter what happens above
+  setTimeout(revealSite, 6000);
+  if (document.hidden) { revealSite(); return; }        // background tab: no ceremony
+  if (!seen && !reduced && introVid) {                  // first visit → the lens-aperture cinematic
+    loader.classList.add("cinematic");
+    if (!reduced) gsap.to(".ld-bar i", { width: "100%", duration: 3.0, ease: "power1.inOut" });
     introVid.play().catch(() => {});
+    const go = () => { flash(0.85); revealSite(); };
     introVid.addEventListener("ended", go);
-    $("#loader").addEventListener("click", go);       // tap to skip
-    setTimeout(go, 3200);                             // guaranteed handoff after the aperture opens
+    loader.addEventListener("click", go);               // tap to skip
+    setTimeout(go, 3000);                               // plain timeout — not gsap
   } else {
-    gsap.to(".ld-bar i", { width: "100%", duration: seen ? 0.25 : 0.55, ease: "power2.inOut", onComplete: dismiss });
+    if (!reduced) gsap.to(".ld-bar i", { width: "100%", duration: seen ? 0.25 : 0.5, ease: "power2.inOut" });
+    setTimeout(() => { flash(0.85); revealSite(); }, seen ? 350 : 650);
   }
+}
+
+/* ── start ── */
+function start() {
+  $("#yr").textContent = new Date().getFullYear();
+  // Render immediately from the bundled manifest, then dismiss the loader — the site
+  // NEVER waits on the network. Supabase content is hydrated in the background below.
+  buildMarquee(); applyLang(); initHero();
+  playIntroThenReveal();
+  loadRemote().then(remote => {
+    if (!remote) return;
+    DBP = remote.photos.map(normPhoto);
+    DBC = remote.collections.map(c => ({ id: c.id, n: c.n, en: c.en, ar: c.ar, lead_en: c.lead_en, lead_ar: c.lead_ar }));
+    remote.copy.forEach(row => { if (row.en) I18N.en[row.key] = row.en; if (row.ar) I18N.ar[row.key] = row.ar; });
+    applyLang();                                         // re-render with the live CMS data
+    ST.refresh();
+  }).catch(() => {});
 }
 /* Run as soon as the DOM is ready — NOT on window "load". main.js is a deferred
    module, so the DOM is already parsed here; gating on "load" would wait for every

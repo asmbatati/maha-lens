@@ -93,7 +93,14 @@ h1, h2, h3 { font-family: var(--disp); font-weight: 400; line-height: 1; letter-
 [dir="rtl"] #cursor .cur-label { letter-spacing: 0; }
 
 /* ── loader ── */
-#loader { position: fixed; inset: 0; z-index: 9999; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; overflow: hidden; }
+#loader { position: fixed; inset: 0; z-index: 9999; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; overflow: hidden;
+  /* CSS-only failsafe: even if main.js never runs, the splash can NEVER trap the
+     site — it fades out on its own. JS clears this the instant start() runs and
+     takes over the (faster) dismissal. */
+  animation: loaderFailsafe 8s forwards; }
+@keyframes loaderFailsafe { 0%, 82% { opacity: 1; visibility: visible; } 100% { opacity: 0; visibility: hidden; pointer-events: none; } }
+/* JS dismissal: kill the failsafe and fade via the compositor (no rAF/gsap needed) */
+#loader.dismiss { animation: none; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .55s var(--ease), visibility 0s .55s; }
 #introVid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .9s var(--ease); }
 #loader.cinematic #introVid { opacity: 1; }
 .ld-scrim { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .9s var(--ease);
