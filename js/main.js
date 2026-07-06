@@ -2,10 +2,10 @@
    curtain, wavy sine-driven photo streams, themed particle skies per section,
    radial camera hub, bilingual EN/AR with RTL, lightbox, custom cursor.
    Content is hydrated from Supabase (admin.html) with data.js as fallback. */
-import { PHOTOS, COLLECTIONS, SRC, REALW, I18N, SLIDES } from "./data.js?v=9";
-import { initHeroShow } from "./heroshow.js?v=9";
-import { initParticles } from "./particles.js?v=9";
-import { loadRemote } from "./remote.js?v=9";
+import { PHOTOS, COLLECTIONS, SRC, REALW, I18N, SLIDES } from "./data.js?v=10";
+import { initHeroShow } from "./heroshow.js?v=10";
+import { initParticles } from "./particles.js?v=10";
+import { loadRemote } from "./remote.js?v=10";
 
 const gsap = window.gsap, ST = window.ScrollTrigger;
 gsap.registerPlugin(ST);
@@ -89,15 +89,30 @@ function setHeroBase(i) {
   swap.onload = () => { base.src = src; base.style.opacity = "1"; };
   swap.src = src;
 }
+let heroTimer = null, heroIdx = 0;
+// main is the single source of truth for the current slide: it ALWAYS advances the
+// base <img> + label, and tells the WebGL reel to transition as a best-effort
+// enhancement (which safely no-ops if its draw loop is frozen). So the hero can
+// never get stuck on the first frame, whatever WebGL does.
+function heroGo(i) {
+  heroIdx = ((i % SLIDES.length) + SLIDES.length) % SLIDES.length;
+  curSlide = heroIdx; slideLabel(heroIdx); setHeroBase(heroIdx);
+  heroShow && heroShow.next();
+}
 function initHero() {
-  heroShow = initHeroShow($("#heroGL"), SLIDES, {
-    reduced, interval: 5200,
-    onSlide: i => { curSlide = i; slideLabel(i); setHeroBase(i); if (i > 0) flash(0.16); },
-  });
+  heroShow = initHeroShow($("#heroGL"), SLIDES, { reduced, onSlide: () => {} });
+  setHeroBase(0); slideLabel(0);
+  if (!reduced) {
+    clearInterval(heroTimer);
+    heroTimer = setInterval(() => {
+      if (document.hidden || !document.body.classList.contains("show-work")) return;
+      heroGo(heroIdx + 1); flash(0.16);
+    }, 5200);
+  }
   const hero = $(".hero");
   hero.addEventListener("click", e => {
     if (e.target.closest(".hero-meta")) return;
-    heroShow.next(); flash(0.3);
+    heroGo(heroIdx + 1); flash(0.3);
   });
   if (!reduced) {
     gsap.to([".hero-ui", ".hero-meta"], { opacity: 0, ease: "none",
@@ -134,7 +149,7 @@ function figure(p, i, coll, k, n, dirSign) {
 }
 function renderWork() {
   sectionSkies.forEach(s => s.destroy()); sectionSkies = [];
-  const host = $("#work"); host.innerHTML = ""; ORDER = [];
+  const host = $("#gallery"); host.innerHTML = ""; ORDER = [];
   DBC.forEach((c, secIdx) => {
     const coll = { name: c.en, name_ar: c.ar };
     const photos = byColl(c.id);
@@ -282,7 +297,7 @@ function buildSectionLines() {
       <path class="sec-path" d="${dAttr}" fill="none" stroke="url(#${gid})"
         stroke-width="${style.w}" stroke-linecap="round" opacity="${style.op}"/>
       <g class="sec-traveler">${TRAVELERS[style.traveler] || TRAVELERS.orb}</g>`;
-    sec.insertBefore(svg, head);
+    sec.appendChild(svg);   // absolute-positioned; head may be nested in a reveal band so can't insertBefore it
     const path = svg.querySelector(".sec-path"), trav = svg.querySelector(".sec-traveler");
     const len = path.getTotalLength();
     path.style.strokeDasharray = len;
@@ -372,8 +387,48 @@ if (matchMedia("(pointer:fine)").matches) {
   (function loop() { cx += (tx - cx) * 0.2; cy += (ty - cy) * 0.2; cur.style.transform = `translate(${cx}px,${cy}px) translate(-50%,-50%)`; requestAnimationFrame(loop); })();
 }
 
+/* ── two-view router: landing (cinematic) ⇄ work (portfolio) ── */
+let workReady = false;
+function showView(routeName, { animate = true } = {}) {
+  const toWork = routeName !== "landing";
+  const landingVid = $("#landingVid");
+  const apply = () => {
+    document.body.classList.toggle("show-work", toWork);
+    if (toWork) {
+      landingVid && landingVid.pause();
+      requestAnimationFrame(() => { try { lenis.resize && lenis.resize(); } catch (e) {} ST.refresh(); });
+      if (!workReady) { workReady = true; setTimeout(() => ST.refresh(), 400); }
+    } else {
+      lenis.scrollTo(0, { immediate: true });
+      if (landingVid && !reduced) landingVid.play().catch(() => {});
+    }
+  };
+  if (animate && !reduced && document.startViewTransition) document.startViewTransition(apply);
+  else apply();
+}
+function routeFromHash(opts) {
+  const h = location.hash.replace(/^#/, "");
+  const isWork = h && h !== "home" && h !== "top";
+  showView(isWork ? "work" : "landing", opts);
+  if (isWork) {
+    if (h === "work") setTimeout(() => lenis.scrollTo(0, { immediate: true }), 0);
+    else { const t = document.getElementById(h); if (t) setTimeout(() => lenis.scrollTo(t, { duration: 1.2 }), 480); }
+  }
+}
+addEventListener("hashchange", () => routeFromHash());
+$$("[data-nav]").forEach(a => a.addEventListener("click", e => {
+  e.preventDefault();
+  const s = a.dataset.nav;
+  if (location.hash.replace(/^#/, "") === s) routeFromHash();   // same hash → re-run (scroll)
+  else location.hash = s;
+}));
+$$("[data-route='landing']").forEach(a => a.addEventListener("click", e => {
+  e.preventDefault();
+  if (!location.hash || location.hash === "#") showView("landing");
+  else location.hash = "";
+}));
+
 /* ── nav ── */
-$$("[data-scroll]").forEach(a => a.addEventListener("click", e => { e.preventDefault(); const t = $(a.dataset.scroll); if (t) lenis.scrollTo(t, { duration: 1.3 }); }));
 $("#langToggle").addEventListener("click", () => { lang = lang === "en" ? "ar" : "en"; applyLang(); ST.refresh(); });
 $("#toTop").addEventListener("click", () => lenis.scrollTo(0, { duration: 1.4 }));
 
@@ -532,10 +587,10 @@ const lightbox = (() => {
     const dx = e.clientX - sx, dy = e.clientY - sy;
     if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy)) step((dx < 0 ? 1 : -1) * (rtl() ? -1 : 1));
   }, { passive: true });
-  $("#work").addEventListener("click", e => {
+  $("#gallery").addEventListener("click", e => {
     const f = e.target.closest(".sp-item"); if (f) open(+f.dataset.index);
   });
-  $("#work").addEventListener("keydown", e => {
+  $("#gallery").addEventListener("keydown", e => {
     if (e.key !== "Enter" && e.key !== " ") return;
     const f = e.target.closest(".sp-item"); if (f) { e.preventDefault(); open(+f.dataset.index); }
   });
@@ -549,28 +604,15 @@ function revealSite() {
   if (_revealed) return; _revealed = true;
   const loader = $("#loader");
   if (loader) { loader.classList.add("dismiss"); setTimeout(() => { loader.style.display = "none"; }, 700); }
-  $("#introVid")?.pause();
   buildReveals();
+  const lv = $("#landingVid");                          // start the landing cinematic once revealed
+  if (lv && !reduced && !document.body.classList.contains("show-work")) lv.play().catch(() => {});
 }
-function playIntroThenReveal() {
-  let seen = false;
-  try { seen = sessionStorage.getItem("seen") === "1"; sessionStorage.setItem("seen", "1"); } catch (e) {}
-  const loader = $("#loader"), introVid = $("#introVid");
-  // absolute guarantee — the loader is gone within 6s no matter what happens above
-  setTimeout(revealSite, 6000);
-  if (document.hidden) { revealSite(); return; }        // background tab: no ceremony
-  if (!seen && !reduced && introVid) {                  // first visit → the lens-aperture cinematic
-    loader.classList.add("cinematic");
-    if (!reduced) gsap.to(".ld-bar i", { width: "100%", duration: 3.0, ease: "power1.inOut" });
-    introVid.play().catch(() => {});
-    const go = () => { flash(0.85); revealSite(); };
-    introVid.addEventListener("ended", go);
-    loader.addEventListener("click", go);               // tap to skip
-    setTimeout(go, 3000);                               // plain timeout — not gsap
-  } else {
-    if (!reduced) gsap.to(".ld-bar i", { width: "100%", duration: seen ? 0.25 : 0.5, ease: "power2.inOut" });
-    setTimeout(() => { flash(0.85); revealSite(); }, seen ? 350 : 650);
-  }
+function dismissLoader() {
+  setTimeout(revealSite, 5000);                         // absolute safety — never trap the loader
+  if (document.hidden) { revealSite(); return; }
+  if (!reduced) gsap.to(".ld-bar i", { width: "100%", duration: 0.55, ease: "power2.inOut" });
+  setTimeout(() => { flash(0.6); revealSite(); }, 650);
 }
 
 /* ── start ── */
@@ -579,7 +621,8 @@ function start() {
   // Render immediately from the bundled manifest, then dismiss the loader — the site
   // NEVER waits on the network. Supabase content is hydrated in the background below.
   buildMarquee(); applyLang(); initHero();
-  playIntroThenReveal();
+  routeFromHash({ animate: false });                    // set landing/work with no transition on first paint
+  dismissLoader();
   loadRemote().then(remote => {
     if (!remote) return;
     DBP = remote.photos.map(normPhoto);

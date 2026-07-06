@@ -159,12 +159,7 @@ export function initHeroShow(canvas, slides, { onSlide, interval = 5200, reduced
     onSlide && onSlide(nxt);
     loadTex((nxt + 1) % slides.length);        // prefetch the one after
   }
-  function schedule() {
-    if (reduced || dead) return;
-    clearInterval(timer);
-    timer = setInterval(() => { if (!document.hidden) goto(cur + 1); }, interval);
-  }
-
+  // auto-advance is owned by main.js (a reliable plain setInterval); heroShow just renders.
   loadTex(0).then(t0 => {
     if (!t0 || dead) return;
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, t0);
@@ -172,36 +167,21 @@ export function initHeroShow(canvas, slides, { onSlide, interval = 5200, reduced
     onSlide && onSlide(0);
     requestAnimationFrame(draw);
     loadTex(1);
-    schedule();
   });
 
   return {
-    next: () => { goto(cur + 1); schedule(); },
-    prev: () => { goto(cur - 1); schedule(); },
+    next: () => goto(cur + 1),
+    prev: () => goto(cur - 1),
     destroy: () => { dead = true; clearInterval(timer); },
   };
 }
 
-/* No-WebGL fallback: stacked <img> opacity crossfade. */
-function initFallback(canvas, slides, { onSlide, interval, reduced }) {
-  const host = canvas.parentElement;
-  canvas.remove();
-  const imgs = slides.map((s, i) => {
-    const im = new Image();
-    im.src = s.src; im.alt = ""; im.className = "hero-fallback";
-    im.style.opacity = i === 0 ? "1" : "0";
-    host.prepend(im);
-    return im;
-  });
-  let cur = 0, timer = null;
-  function goto(i) {
-    const n = (i + slides.length) % slides.length;
-    if (n === cur) return;
-    imgs[cur].style.opacity = "0";
-    imgs[n].style.opacity = "1";
-    cur = n; onSlide && onSlide(n);
-  }
-  if (!reduced) timer = setInterval(() => { if (!document.hidden) goto(cur + 1); }, interval);
+/* No-WebGL fallback: the base <img> (driven by main's onSlide) IS the visible layer,
+   so this just tracks the index and reports slide changes. */
+function initFallback(canvas, slides, { onSlide }) {
+  canvas.style.display = "none";
+  let cur = 0;
+  const goto = i => { const n = (i + slides.length) % slides.length; if (n === cur) { return; } cur = n; onSlide && onSlide(n); };
   onSlide && onSlide(0);
-  return { next: () => goto(cur + 1), prev: () => goto(cur - 1), destroy: () => clearInterval(timer) };
+  return { next: () => goto(cur + 1), prev: () => goto(cur - 1), destroy: () => {} };
 }

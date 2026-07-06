@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Archivo:wght@300..700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Alexandria:wght@300..600&display=swap">
   <link rel="preload" as="image" href="img/product/ember-w1280.webp">
-  <link rel="stylesheet" href="css/main.css?v=9">
+  <link rel="stylesheet" href="css/main.css?v=10">
   <link rel="icon" type="image/png" sizes="48x48" href="favicon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -31,14 +31,9 @@
   </script>
 </head>
 <body>
-  <a class="skip" href="#work" data-i18n="skip">Skip to work</a>
+  <a class="skip" href="#work" data-nav="work" data-i18n="skip">Skip to work</a>
 
   <div id="loader" aria-hidden="true">
-    <video id="introVid" muted playsinline preload="metadata" tabindex="-1" poster="video/hero-lens-poster.webp">
-      <source src="video/hero-lens.webm" type="video/webm">
-      <source src="video/hero-lens.mp4" type="video/mp4">
-    </video>
-    <div class="ld-scrim"></div>
     <div class="ld-name glow">Maha <span>Lens</span> <b>عدسة مها</b></div>
     <div class="ld-bar"><i></i></div>
   </div>
@@ -48,11 +43,11 @@
   <div id="cursor" aria-hidden="true"><span class="cur-label"></span></div>
 
   <nav class="nav">
-    <a class="brand" data-scroll="#top" href="#top"><img class="brand-mark" src="img/brand/logo-white.png" alt=""><span class="brand-word">Maha <i>Lens</i></span></a>
+    <a class="brand" data-route="landing" href="#"><img class="brand-mark" src="img/brand/logo-white.png" alt=""><span class="brand-word">Maha <i>Lens</i></span></a>
     <div class="nav-links">
-      <a data-scroll="#work" href="#work" data-i18n="nav_work">Work</a>
-      <a data-scroll="#about" href="#about" data-i18n="nav_about">About</a>
-      <a data-scroll="#contact" href="#contact" data-i18n="nav_contact">Contact</a>
+      <a data-nav="work" href="#work" data-i18n="nav_work">Work</a>
+      <a data-nav="about" href="#about" data-i18n="nav_about">About</a>
+      <a data-nav="contact" href="#contact" data-i18n="nav_contact">Contact</a>
       <button id="langToggle" class="lang" aria-label="التبديل إلى العربية">
         <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.4 3.9 3.4 14.1 0 18M12 3c-3.4 3.9-3.4 14.1 0 18"/></svg>
         <span data-i18n="lang">ع</span>
@@ -60,7 +55,24 @@
     </div>
   </nav>
 
-  <main id="top">
+  <!-- ══ LANDING VIEW — the lens cinematic ══ -->
+  <section id="view-landing" class="view view-landing">
+    <video id="landingVid" class="landing-vid" muted loop autoplay playsinline preload="auto" poster="video/landing-hero-poster.webp" aria-hidden="true">
+      <source src="video/landing-hero.webm" type="video/webm">
+      <source src="video/landing-hero.mp4" type="video/mp4">
+    </video>
+    <div class="landing-scrim"></div>
+    <div class="landing-inner">
+      <p class="hero-kicker glow"><span data-i18n="kicker">Photographer</span></p>
+      <h1 class="landing-title glow"><span class="l1">Maha</span> <em class="l2">Lens</em></h1>
+      <p class="landing-ar">عدسة مها</p>
+      <p class="landing-tag" data-i18n="landing_tag">Light, texture and stillness — seen through Maha's lens.</p>
+      <button class="enter-btn" id="enterWork" data-nav="work"><span data-i18n="enter">View the work</span> <i aria-hidden="true">→</i></button>
+    </div>
+    <button class="landing-scroll" id="enterScroll" data-nav="work" aria-label="View the work"><span data-i18n="scroll">Scroll</span><i></i></button>
+  </section>
+
+  <main id="top" class="view view-work">
     <!-- HERO — pinned WebGL reel; the page curls over it savor-style -->
     <header class="hero" id="hero">
       <!-- always-visible base photo; the WebGL canvas enhances it with the liquid reel when available -->
@@ -96,7 +108,7 @@
       <div class="marquee" aria-hidden="true"><div class="mq-track" id="mqTrack"></div></div>
 
       <!-- COLLECTIONS (rendered by JS as wavy spotlight streams) -->
-      <div id="work"></div>
+      <div id="gallery"></div>
 
       <!-- ABOUT -->
       <section class="about" id="about">
@@ -159,6 +171,6 @@
     <button class="lb-btn lb-next" aria-label="Next photo"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 4l8 8-8 8" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   </div>
 
-  <script type="module" src="js/main.js?v=9"></script>
+  <script type="module" src="js/main.js?v=10"></script>
 </body>
 </html>
