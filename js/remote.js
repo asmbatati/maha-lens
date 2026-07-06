@@ -11,9 +11,9 @@ export async function loadRemote(timeoutMs = 2500) {
     const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), timeoutMs));
     const [photos, collections, copy] = await Promise.race([
       Promise.all([
-        q("photos?select=*&published=eq.true&order=sort.asc"),
-        q("collections?select=*&enabled=eq.true&order=sort.asc"),
-        q("site_copy?select=*"),
+        q("maha_photos?select=*&published=eq.true&order=sort.asc"),
+        q("maha_collections?select=*&enabled=eq.true&order=sort.asc"),
+        q("maha_site_copy?select=*"),
       ]),
       timeout,
     ]);

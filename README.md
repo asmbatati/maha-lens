@@ -8,7 +8,7 @@ A buildless, bilingual (English ⇄ Arabic / RTL) single-page site with a scroll
 ## Stack
 
 - Plain **HTML + CSS + ES modules** — no build step.
-- **Supabase CMS** — photos/collections/copy hydrate from Supabase (`js/remote.js`, `data.js` fallback); `admin.html` is Maha's phone-first panel (RLS-locked writes, EXIF-stripping + auto-orienting webp uploads, suspendable sections).
+- **Supabase CMS** — photos/collections/copy hydrate from Supabase (`js/remote.js`, `data.js` fallback); `admin.html` is Maha's phone-first panel (RLS-locked writes, EXIF-stripping + auto-orienting webp uploads, suspendable sections). Lives in the shared **"Personal Websites"** Supabase project (`pvconwkeshzoovchvzqm`) — this site owns the `maha_photos` / `maha_collections` / `maha_site_copy` tables, the `maha_is_admin()` helper, and the `photos` storage bucket (bucket keeps its legacy un-prefixed name because photo rows embed absolute public URLs).
 - **Per-section moods** — silk `#cb997e` with falling flacons (Product), sage `#6b705c` with tumbling fruit (Gourmet), cream `#fff9eb` with petals (Nature), sand `#ddbea9` with floating calligraphy (Architecture), velvet bokeh (Coverage) — plus a themed companion line weaving through each stream with a traveler that rides the scroll.
 - **Raw WebGL hero reel** (`js/heroshow.js`) — liquid-displacement crossfades between her photographs, cover-fit + in-shader Ken-Burns, `<img>` crossfade fallback. The page rises over the pinned hero behind a **curved curtain edge** (savor.it-style).
 - **Wavy spotlight streams** — each collection is a column of photos drifting on three layered sine waves with clip-path reveals (GSAP ScrollTrigger per image, config in `WAVE`).

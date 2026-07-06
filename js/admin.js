@@ -38,8 +38,8 @@ $$(".tabs button").forEach(b => b.addEventListener("click", () => {
 let colls = [], photos = [];
 async function boot() {
   const [c, p] = await Promise.all([
-    supa.from("collections").select("*").order("sort"),
-    supa.from("photos").select("*").order("sort"),
+    supa.from("maha_collections").select("*").order("sort"),
+    supa.from("maha_photos").select("*").order("sort"),
   ]);
   colls = c.data || []; photos = p.data || [];
   $("#collPick").innerHTML = colls.map(x => `<option value="${x.id}">${x.ar} · ${x.en}</option>`).join("");
@@ -73,12 +73,12 @@ $("#photoGrid").addEventListener("click", async e => {
   const id = card.dataset.id;
   const p = photos.find(x => x.id === id);
   if (e.target.classList.contains("act-pub")) {
-    const { error } = await supa.from("photos").update({ published: !p.published }).eq("id", id);
+    const { error } = await supa.from("maha_photos").update({ published: !p.published }).eq("id", id);
     if (!error) { p.published = !p.published; renderPhotos(); }
   } else if (e.target.classList.contains("act-save")) {
     const title_ar = card.querySelector('[data-f="title_ar"]').value.trim();
     const title = card.querySelector('[data-f="title"]').value.trim();
-    const { error } = await supa.from("photos").update({ title, title_ar }).eq("id", id);
+    const { error } = await supa.from("maha_photos").update({ title, title_ar }).eq("id", id);
     e.target.textContent = error ? "خطأ" : "تم ✓";
     if (!error) { p.title = title; p.title_ar = title_ar; }
   } else if (e.target.classList.contains("act-del")) {
@@ -88,7 +88,7 @@ $("#photoGrid").addEventListener("click", async e => {
       const paths = [p.src_640, p.src_1280, p.src_2000].map(u => decodeURIComponent(u.split(marker)[1]));
       await supa.storage.from("photos").remove(paths);
     }
-    const { error } = await supa.from("photos").delete().eq("id", id);
+    const { error } = await supa.from("maha_photos").delete().eq("id", id);
     if (!error) { photos = photos.filter(x => x.id !== id); renderPhotos(); }
   }
 });
@@ -135,7 +135,7 @@ upBtn.addEventListener("click", async () => {
     const maxSort = Math.max(0, ...photos.filter(p => p.coll === coll).map(p => p.sort));
     const row = { coll, slug, title, title_ar, ar: +ar.toFixed(4), cap,
       src_640: urls[640], src_1280: urls[1280], src_2000: urls[2000], sort: maxSort + 10 };
-    const { data, error } = await supa.from("photos").insert(row).select().single();
+    const { data, error } = await supa.from("maha_photos").insert(row).select().single();
     if (error) throw error;
     photos.push(data);
     prog.value = 100;
@@ -175,14 +175,14 @@ $("#tab-sections").addEventListener("click", async e => {
     lead_ar: card.querySelector('[data-f="lead_ar"]').value,
     lead_en: card.querySelector('[data-f="lead_en"]').value,
   };
-  const { error } = await supa.from("collections").update(patch).eq("id", card.dataset.id);
+  const { error } = await supa.from("maha_collections").update(patch).eq("id", card.dataset.id);
   msg(card.querySelector(".msg"), error ? error.message : "تم ✓", !error);
 });
 
 /* ── copy tab ── */
 const COPY_LABELS = { intro: "المقدمة", about: "نبذة", about_note: "سطر التواصل" };
 async function renderCopy() {
-  const { data } = await supa.from("site_copy").select("*");
+  const { data } = await supa.from("maha_site_copy").select("*");
   const rows = data || [];
   $("#tab-copy").innerHTML = Object.entries(COPY_LABELS).map(([key, label]) => {
     const row = rows.find(r => r.key === key) || { en: "", ar: "" };
@@ -200,6 +200,6 @@ $("#tab-copy").addEventListener("click", async e => {
   const row = { key: card.dataset.key,
     ar: card.querySelector('[data-f="ar"]').value,
     en: card.querySelector('[data-f="en"]').value };
-  const { error } = await supa.from("site_copy").upsert(row);
+  const { error } = await supa.from("maha_site_copy").upsert(row);
   msg(card.querySelector(".msg"), error ? error.message : "تم ✓", !error);
 });
