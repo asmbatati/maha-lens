@@ -10,3 +10,7 @@ desktop.ini
 node_modules/
 dist/
 .vite/
+
+# Higgsfield staging — large text-prompt-only originals; the shipped, optimized
+# derivatives live in video/ and img/fx/. Kept locally, not committed.
+img/higgsfield/

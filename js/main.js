@@ -36,13 +36,13 @@ let DBC = COLLECTIONS.slice();
 const byColl = id => DBP.filter(p => p.coll === id);
 const srcsetOf = p => `${p.s640} ${REALW(p, 640)}w, ${p.s1280} ${REALW(p, 1280)}w, ${p.s2000} ${REALW(p, 2000)}w`;
 
-/* per-section mood: background theme + particle mode */
+/* per-section mood: background theme · particle mode · cinematic reveal video · texture backdrop */
 const THEMES = {
-  product:      { theme: "silk",   particles: "flacons" },   // #cb997e · bottles fall & float · silk line
-  gourmet:      { theme: "sage",   particles: "fruits" },    // #6b705c · fruit tumbles · vine line
-  nature:       { theme: "garden", particles: "petals" },    // #fff9eb · petals · waterfall-cloud line
-  architecture: { theme: "sand",   particles: "callig" },    // #ddbea9 · calligraphy · ink line
-  coverage:     { theme: "velvet", particles: "bokeh" },     // dark · bokeh · light-trail line
+  product:      { theme: "silk",   particles: "flacons", video: "tr-product" },              // #cb997e
+  gourmet:      { theme: "sage",   particles: "fruits",  video: "tr-gourmet", tex: "bg-sage" }, // #6b705c
+  nature:       { theme: "garden", particles: "petals",  video: "tr-nature" },               // #fff9eb
+  architecture: { theme: "sand",   particles: "callig" },                                    // #ddbea9
+  coverage:     { theme: "velvet", particles: "bokeh",   tex: "bg-bokeh" },                  // dark
 };
 const themeOf = id => THEMES[id] || { theme: "velvet", particles: "stars" };
 
@@ -131,18 +131,38 @@ function renderWork() {
     const mood = themeOf(c.id);
     const dirSign = secIdx % 2 === 0 ? 1 : -1;          // drift flips section to section
     const sec = el("section", "collection"); sec.id = c.id; sec.dataset.theme = mood.theme; sec.dataset.dir = dirSign;
-    sec.innerHTML = `<div class="sec-sky" aria-hidden="true"><canvas></canvas></div>
-      <div class="coll-head"><span class="coll-eyebrow">${c.n} — ${lang === "ar" ? c.ar : c.en} · ${photos.length}</span>
+    if (mood.video) sec.classList.add("has-reveal");
+    const headInner = `<span class="coll-eyebrow">${c.n} — ${lang === "ar" ? c.ar : c.en} · ${photos.length}</span>
       <h2 class="coll-title glow">${lang === "ar" ? c.ar : c.en}</h2>
-      <p class="coll-lead">${lang === "ar" ? c.lead_ar : c.lead_en}</p></div>
-      <div class="spotlight"></div>`;
+      <p class="coll-lead">${lang === "ar" ? c.lead_ar : c.lead_en}</p>`;
+    const head = mood.video
+      ? `<div class="sec-reveal">
+           <video class="sec-reveal-vid" muted loop playsinline preload="none" poster="video/${mood.video}-poster.webp" aria-hidden="true">
+             <source src="video/${mood.video}.webm" type="video/webm"><source src="video/${mood.video}.mp4" type="video/mp4"></video>
+           <div class="sec-reveal-scrim"></div>
+           <div class="coll-head">${headInner}</div>
+         </div>`
+      : `<div class="coll-head">${headInner}</div>`;
+    const tex = mood.tex ? `<div class="sec-tex" style="background-image:url(img/fx/${mood.tex}.webp?v=6)" aria-hidden="true"></div>` : "";
+    sec.innerHTML = `${tex}<div class="sec-sky" aria-hidden="true"><canvas></canvas></div>${head}<div class="spotlight"></div>`;
     const g = sec.querySelector(".spotlight");
     photos.forEach((p, i) => g.append(figure(p, i, coll, i, photos.length, dirSign)));
     host.append(sec);
     sectionSkies.push(initParticles(sec.querySelector(".sec-sky canvas"), { mode: mood.particles, reduced, host: sec }));
   });
   updateSpotlightSizes();
+  bindRevealVideos();
   ST.getAll().forEach(t => { if (t.trigger && !document.contains(t.trigger)) t.kill(); });
+}
+/* cinematic reveal bands play only while on-screen (and never under reduced-motion) */
+let revealIO = null;
+function bindRevealVideos() {
+  if (reduced) return;
+  revealIO ??= new IntersectionObserver(entries => entries.forEach(e => {
+    const v = e.target;
+    if (e.isIntersecting) v.play().catch(() => {}); else v.pause();
+  }), { rootMargin: "0px 0px -10% 0px" });
+  $$(".sec-reveal-vid").forEach(v => { if (!v.__io) { v.__io = 1; revealIO.observe(v); } });
 }
 function updateSpotlightSizes() {
   const sizeFactor = Math.min(innerWidth / 750, 1);
@@ -225,7 +245,9 @@ function buildSectionLines() {
     const style = LINE_STYLES[sec.dataset.theme] || LINE_STYLES.velvet;
     const W = sec.clientWidth, H = sec.scrollHeight;
     const head = sec.querySelector(".coll-head");
-    const y0 = head ? head.offsetTop + head.offsetHeight + 30 : 120;
+    // measure relative to the section — head may be nested inside a reveal band
+    const secTop = sec.getBoundingClientRect().top;
+    const y0 = head ? (head.getBoundingClientRect().bottom - secTop) + 30 : 120;
     const items = sec.querySelectorAll(".sp-item").length;
     const n = Math.max(3, items + 1);
     const step = (H - y0 - 60) / n;
@@ -527,10 +549,24 @@ async function start() {
     buildReveals();
     return;
   }
-  const tl = gsap.timeline();
-  tl.to(".ld-bar i", { width: "100%", duration: seen ? 0.25 : 0.55, ease: "power2.inOut" })
-    .add(() => flash(0.85))
-    .to("#loader", { autoAlpha: 0, duration: 0.45, onComplete: () => $("#loader").style.display = "none" }, "<0.02")
-    .add(buildReveals, "<0.1");
+  const dismiss = () => {
+    const tl = gsap.timeline();
+    tl.add(() => flash(0.85))
+      .to("#loader", { autoAlpha: 0, duration: 0.55, onComplete: () => { $("#loader").style.display = "none"; $("#introVid")?.pause(); } })
+      .add(buildReveals, "<0.1");
+  };
+  const introVid = $("#introVid");
+  // First visit → the lens-aperture cinematic opens onto the site (the brand metaphor)
+  if (!seen && !reduced && introVid) {
+    $("#loader").classList.add("cinematic");
+    gsap.to(".ld-bar i", { width: "100%", duration: 3.0, ease: "power1.inOut" });
+    let done = false; const go = () => { if (done) return; done = true; dismiss(); };
+    introVid.play().catch(() => {});
+    introVid.addEventListener("ended", go);
+    $("#loader").addEventListener("click", go);       // tap to skip
+    setTimeout(go, 3200);                             // guaranteed handoff after the aperture opens
+  } else {
+    gsap.to(".ld-bar i", { width: "100%", duration: seen ? 0.25 : 0.55, ease: "power2.inOut", onComplete: dismiss });
+  }
 }
 if (document.readyState === "complete") start(); else addEventListener("load", start);
