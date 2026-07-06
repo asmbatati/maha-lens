@@ -129,39 +129,38 @@ a, button { touch-action: manipulation; }
 .lang svg { flex-shrink: 0; }
 .lang:hover { background: var(--ivory); color: var(--bg); border-color: var(--ivory); }
 
-/* ── two-view app: landing (cinematic) ⇄ work (the portfolio) ── */
-.view-landing { position: fixed; inset: 0; z-index: 60; overflow: hidden; background: var(--bg);
-  opacity: 1; transition: opacity .9s var(--ease), transform 1.1s var(--ease), visibility 0s; }
-.landing-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.landing-scrim { position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(ellipse at 50% 42%, rgba(15,12,10,.15), rgba(15,12,10,.6) 76%),
-              linear-gradient(180deg, rgba(15,12,10,.4), rgba(15,12,10,.1) 40%, rgba(15,12,10,.62)); }
-.landing-inner { position: absolute; z-index: 2; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; padding: 0 var(--pad); }
+/* ── animated cross-page transition (separate index.html ⇄ work.html) ── */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: vt-out .5s var(--ease) both; }
+::view-transition-new(root) { animation: vt-in .6s var(--ease) both; }
+@keyframes vt-out { to { opacity: 0; transform: scale(1.04); } }
+@keyframes vt-in { from { opacity: 0; transform: scale(1.03); } }
+
+/* ── landing page: the lens cinematic (video) ── */
+.landing-page { background: var(--bg); overflow: hidden; }
+.landing { position: relative; width: 100%; height: 100vh; height: 100svh; overflow: hidden; display: grid; place-items: center; }
+.landing-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+.landing-scrim { position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 44%, rgba(15,12,10,.12), rgba(15,12,10,.58) 78%),
+              linear-gradient(180deg, rgba(15,12,10,.4), rgba(15,12,10,.08) 40%, rgba(15,12,10,.6)); }
+.landing-inner { position: relative; z-index: 2; text-align: center; padding: 0 var(--pad); }
+.landing-inner .hero-kicker { justify-content: center; }
 .landing-title { font-size: clamp(4rem, 15vw, 13rem); line-height: .82; color: var(--ivory); }
 .landing-title .l2 { font-style: normal; color: var(--gold); }
 .landing-ar { font-family: var(--ar); font-size: clamp(1.3rem, 3.4vw, 2.2rem); color: var(--blush); margin-top: .5rem; }
 .landing-tag { max-width: 30ch; margin: 1.4rem auto 0; color: var(--soft); font-size: clamp(.95rem, 1.4vw, 1.1rem); }
 [dir="rtl"] .landing-tag { font-family: var(--ar); }
-.landing-inner .hero-kicker { justify-content: center; }
-.enter-btn { margin-top: 2.2rem; display: inline-flex; align-items: center; gap: .7em; font-family: var(--sans); font-size: .92rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ivory); padding: .95em 2em; border: 1px solid rgba(244,236,223,.45); border-radius: 99px; background: rgba(15,12,10,.28); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: background .35s, color .35s, border-color .35s, gap .35s; }
+.enter-btn { margin-top: 2.2rem; display: inline-flex; align-items: center; gap: .7em; font-family: var(--sans); font-size: .92rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ivory); padding: .95em 2em; border: 1px solid rgba(244,236,223,.45); border-radius: 99px; background: rgba(15,12,10,.35); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: background .35s, color .35s, border-color .35s, gap .35s; }
 [dir="rtl"] .enter-btn { letter-spacing: 0; }
 .enter-btn:hover { background: var(--gold); color: #14100c; border-color: var(--gold); gap: 1.1em; }
 .enter-btn i { font-style: normal; }
 [dir="rtl"] .enter-btn i { transform: scaleX(-1); }
-.landing-scroll { position: absolute; z-index: 2; bottom: clamp(1.6rem, 5vh, 3rem); left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; color: var(--soft); }
+.enter-link { position: relative; }
+.landing-scroll { position: absolute; z-index: 3; bottom: clamp(1.6rem, 5vh, 3rem); left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; color: var(--soft); }
 [dir="rtl"] .landing-scroll { letter-spacing: 0; }
 .landing-scroll i { width: 1px; height: 42px; background: var(--gold); transform-origin: top; animation: scrolldrop 2.2s var(--ease) infinite; }
 @keyframes scrolldrop { 0%{transform:scaleY(0);transform-origin:top} 45%{transform:scaleY(1);transform-origin:top} 55%{transform:scaleY(1);transform-origin:bottom} 100%{transform:scaleY(0);transform-origin:bottom} }
-
-/* view switching — landing lifts away, work fades up */
-.view-work { opacity: 0; transition: opacity .7s var(--ease) .25s; }
-body:not(.show-work) .view-work { visibility: hidden; pointer-events: none; }
-body:not(.show-work) { overflow: hidden; height: 100svh; }
-body.show-work .view-landing { opacity: 0; transform: scale(1.08); visibility: hidden; pointer-events: none; transition: opacity .8s var(--ease), transform 1.1s var(--ease), visibility 0s .8s; }
-body.show-work .view-work { opacity: 1; }
-body:not(.show-work) .hub-btn { opacity: 0; pointer-events: none; }
-/* on the work view, the brand returns you to the landing */
-.nav .brand { cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .landing-scroll i { animation: none; } }
 
 /* ── hero (pinned; the page rises over it) ── */
 .hero { position: sticky; top: 0; z-index: 1; height: 100vh; height: 100svh; min-height: 560px; overflow: hidden; background: var(--bg-2); }

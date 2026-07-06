@@ -81,7 +81,7 @@ export const SLIDES = ["ember", "facet", "amber", "wildgold", "cocoa"].map(s => 
 
 export const I18N = {
   en: {
-    nav_work: "Work", nav_about: "About", nav_contact: "Contact", lang: "ع",
+    nav_home: "Home", nav_work: "Work", nav_about: "About", nav_contact: "Contact", lang: "ع",
     lang_label: "التبديل إلى العربية",
     skip: "Skip to work",
     kicker: "Photographer",
@@ -99,7 +99,7 @@ export const I18N = {
     hub_label: "Browse the collections",
   },
   ar: {
-    nav_work: "الأعمال", nav_about: "نبذة", nav_contact: "تواصل", lang: "EN",
+    nav_home: "الرئيسية", nav_work: "الأعمال", nav_about: "نبذة", nav_contact: "تواصل", lang: "EN",
     lang_label: "Switch to English",
     skip: "تخطٍّ إلى الأعمال",
     kicker: "مصوّرة",

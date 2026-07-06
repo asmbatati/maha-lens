@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Work · Maha Lens · عدسة مها</title>
+  <meta name="description" content="The portfolio of Maha Omar — product, gourmet, nature, architecture and event photography.">
+  <meta name="theme-color" content="#0f0c0a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Archivo:wght@300..700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Alexandria:wght@300..600&display=swap">
+  <link rel="preload" as="image" href="img/product/ember-w1280.webp?v=6">
+  <link rel="stylesheet" href="css/main.css?v=12">
+  <link rel="icon" type="image/png" sizes="48x48" href="favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
+</head>
+<body class="work-page">
+  <div id="loader" aria-hidden="true">
+    <div class="ld-name glow">Maha <span>Lens</span> <b>عدسة مها</b></div>
+    <div class="ld-bar"><i></i></div>
+  </div>
+
+  <div id="flash" aria-hidden="true"></div>
+  <div id="progress" aria-hidden="true"><i></i></div>
+  <div id="cursor" aria-hidden="true"><span class="cur-label"></span></div>
+
+  <nav class="nav">
+    <a class="brand" href="./" style="view-transition-name:brand"><img class="brand-mark" src="img/brand/logo-white.png" alt=""><span class="brand-word">Maha <i>Lens</i></span></a>
+    <div class="nav-links">
+      <a href="./" data-i18n="nav_home">Home</a>
+      <a data-scroll="work" href="#hero" data-i18n="nav_work">Work</a>
+      <a data-scroll="#about" href="#about" data-i18n="nav_about">About</a>
+      <a data-scroll="#contact" href="#contact" data-i18n="nav_contact">Contact</a>
+      <button id="langToggle" class="lang" aria-label="التبديل إلى العربية">
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.4 3.9 3.4 14.1 0 18M12 3c-3.4 3.9-3.4 14.1 0 18"/></svg>
+        <span data-i18n="lang">ع</span>
+      </button>
+    </div>
+  </nav>
+
+  <main id="top">
+    <!-- HERO — pinned WebGL reel over an always-visible base photo -->
+    <header class="hero" id="hero">
+      <img id="heroBase" class="hero-base" src="img/product/ember-w1280.webp?v=6" alt="Maha Lens — selected work" fetchpriority="high">
+      <canvas id="heroGL"></canvas>
+      <div class="hero-scrim" aria-hidden="true"></div>
+      <div class="hero-ui">
+        <p class="hero-kicker"><span data-i18n="kicker">Photographer</span></p>
+        <h1 class="hero-title glow"><span class="l1">Maha</span> <em class="l2">Lens</em></h1>
+        <p class="hero-ar">عدسة مها</p>
+        <p class="hero-sig"><span>Maha Omar</span> · <span>مها عمر</span></p>
+      </div>
+      <div class="hero-meta">
+        <div class="slide-info">
+          <span class="slide-count"><b id="slideNum">01</b> / <i id="slideTotal">06</i></span>
+          <span class="slide-title" id="slideTitle"></span>
+        </div>
+        <p class="hero-hint" data-i18n="hero_hint">Click to change the frame</p>
+        <div class="hero-scroll"><span data-i18n="scroll">Scroll</span><i></i></div>
+      </div>
+    </header>
+
+    <div class="page-body" id="pageBody">
+      <div class="sky-wrap" aria-hidden="true"><canvas id="stars"></canvas></div>
+
+      <section class="intro">
+        <p class="intro-lead glow reveal-line" data-i18n="intro">A photographer's eye for <em>light, texture and stillness</em> — commercial work made with care, and the natural world in between.</p>
+      </section>
+
+      <div class="marquee" aria-hidden="true"><div class="mq-track" id="mqTrack"></div></div>
+
+      <div id="gallery"></div>
+
+      <section class="about" id="about">
+        <div class="about-inner">
+          <span class="coll-eyebrow" data-i18n="about_eyebrow">About</span>
+          <h2 class="about-statement glow reveal-words" data-i18n="about">I make photography of the things that inspire me and leave a mark. I like nature, culture, food, and product photography.</h2>
+          <p class="about-note reveal-up" data-i18n="about_note">Based in Saudi Arabia. Available for commissions.</p>
+        </div>
+      </section>
+
+      <footer class="contact" id="contact">
+        <div class="contact-inner">
+          <img class="contact-logo" src="img/brand/logo-white.png" alt="Maha Lens · عدسة مها" loading="lazy">
+          <span class="coll-eyebrow" data-i18n="contact_eyebrow">Get in touch</span>
+          <a class="contact-mail glow" href="mailto:mahaomarba@gmail.com">mahaomarba@gmail.com</a>
+          <div class="contact-row">
+            <a href="https://instagram.com/xmaha.95" target="_blank" rel="noopener"><span data-i18n="contact_ig">Instagram</span> ↗ @xmaha.95</a>
+            <a href="mailto:mahaomarba@gmail.com"><span data-i18n="contact_email">Email</span> ↗</a>
+            <button id="toTop" class="to-top" data-i18n="to_top">Back to top</button>
+          </div>
+          <div class="foot-brand" aria-hidden="true">
+            <p class="foot-ar">عدسة مها</p>
+            <h2 class="foot-logo glow">Maha Lens</h2>
+          </div>
+          <div class="contact-foot">
+            <span>© <span id="yr"></span> Maha Lens · عدسة مها</span>
+            <span>Maha Omar · مها عمر</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </main>
+
+  <button id="hubBtn" class="hub-btn" aria-haspopup="dialog" aria-label="Browse the collections">
+    <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" class="aperture">
+      <circle cx="12" cy="12" r="9.6" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <g stroke="currentColor" stroke-width="1.1" stroke-linecap="round">
+        <path d="M12 2.4 L19.8 16.5"/><path d="M19.8 7.5 L12 21.6"/><path d="M19.8 16.5 L4.2 16.5"/>
+        <path d="M12 21.6 L4.2 7.5"/><path d="M4.2 16.5 L12 2.4"/><path d="M4.2 7.5 L19.8 7.5"/>
+      </g>
+    </svg>
+  </button>
+  <div id="hub" role="dialog" aria-modal="true" aria-label="Browse the collections" hidden>
+    <div class="hub-backdrop"></div>
+    <div class="hub-center" aria-hidden="true"><img src="img/brand/logo-white.png" alt=""></div>
+    <div class="hub-chips" id="hubChips"></div>
+  </div>
+
+  <div id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer" hidden>
+    <div class="lb-backdrop"></div>
+    <figure class="lb-stage">
+      <img class="lb-img" alt="">
+      <figcaption class="lb-caption"><span class="lb-title"></span><span class="lb-count"></span></figcaption>
+    </figure>
+    <button class="lb-btn lb-close" aria-label="Close"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg></button>
+    <button class="lb-btn lb-prev" aria-label="Previous photo"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 4l-8 8 8 8" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="lb-btn lb-next" aria-label="Next photo"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 4l8 8-8 8" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  </div>
+
+  <script type="module" src="js/main.js?v=12"></script>
+</body>
+</html>

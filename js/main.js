@@ -2,10 +2,10 @@
    curtain, wavy sine-driven photo streams, themed particle skies per section,
    radial camera hub, bilingual EN/AR with RTL, lightbox, custom cursor.
    Content is hydrated from Supabase (admin.html) with data.js as fallback. */
-import { PHOTOS, COLLECTIONS, SRC, REALW, I18N, SLIDES } from "./data.js?v=10";
-import { initHeroShow } from "./heroshow.js?v=10";
-import { initParticles } from "./particles.js?v=10";
-import { loadRemote } from "./remote.js?v=10";
+import { PHOTOS, COLLECTIONS, SRC, REALW, I18N, SLIDES } from "./data.js?v=12";
+import { initHeroShow } from "./heroshow.js?v=12";
+import { initParticles } from "./particles.js?v=12";
+import { loadRemote } from "./remote.js?v=12";
 
 const gsap = window.gsap, ST = window.ScrollTrigger;
 gsap.registerPlugin(ST);
@@ -105,7 +105,7 @@ function initHero() {
   if (!reduced) {
     clearInterval(heroTimer);
     heroTimer = setInterval(() => {
-      if (document.hidden || !document.body.classList.contains("show-work")) return;
+      if (document.hidden) return;
       heroGo(heroIdx + 1); flash(0.16);
     }, 5200);
   }
@@ -131,7 +131,7 @@ const CONFIG = {
   clipMax: 20,
   clipPower: 2,
 };
-const BASE_H = 375;
+const BASE_H = 560;   // larger photos (was 375)
 let ORDER = [];
 let sectionSkies = [];
 
@@ -191,7 +191,7 @@ function bindRevealVideos() {
   $$(".sec-reveal-vid").forEach(v => { if (!v.__io) { v.__io = 1; revealIO.observe(v); } });
 }
 function updateSpotlightSizes() {
-  const sizeFactor = Math.min(innerWidth / 750, 1);
+  const sizeFactor = Math.min(innerWidth / 620, 1);
   $$(".sp-item").forEach(item => {
     const ar = +item.dataset.ar, k = +item.dataset.k, n = +item.dataset.n;
     // reference shrink: the last quarter of each stream tapers down to 50%
@@ -387,48 +387,13 @@ if (matchMedia("(pointer:fine)").matches) {
   (function loop() { cx += (tx - cx) * 0.2; cy += (ty - cy) * 0.2; cur.style.transform = `translate(${cx}px,${cy}px) translate(-50%,-50%)`; requestAnimationFrame(loop); })();
 }
 
-/* ── two-view router: landing (cinematic) ⇄ work (portfolio) ── */
-let workReady = false;
-function showView(routeName, { animate = true } = {}) {
-  const toWork = routeName !== "landing";
-  const landingVid = $("#landingVid");
-  const apply = () => {
-    document.body.classList.toggle("show-work", toWork);
-    if (toWork) {
-      landingVid && landingVid.pause();
-      requestAnimationFrame(() => { try { lenis.resize && lenis.resize(); } catch (e) {} ST.refresh(); });
-      if (!workReady) { workReady = true; setTimeout(() => ST.refresh(), 400); }
-    } else {
-      lenis.scrollTo(0, { immediate: true });
-      if (landingVid && !reduced) landingVid.play().catch(() => {});
-    }
-  };
-  if (animate && !reduced && document.startViewTransition) document.startViewTransition(apply);
-  else apply();
-}
-function routeFromHash(opts) {
-  const h = location.hash.replace(/^#/, "");
-  const isWork = h && h !== "home" && h !== "top";
-  showView(isWork ? "work" : "landing", opts);
-  if (isWork) {
-    if (h === "work") setTimeout(() => lenis.scrollTo(0, { immediate: true }), 0);
-    else { const t = document.getElementById(h); if (t) setTimeout(() => lenis.scrollTo(t, { duration: 1.2 }), 480); }
-  }
-}
-addEventListener("hashchange", () => routeFromHash());
-$$("[data-nav]").forEach(a => a.addEventListener("click", e => {
+/* ── nav (in-page scroll on the work page; the brand links to the landing) ── */
+$$("[data-scroll]").forEach(a => a.addEventListener("click", e => {
   e.preventDefault();
-  const s = a.dataset.nav;
-  if (location.hash.replace(/^#/, "") === s) routeFromHash();   // same hash → re-run (scroll)
-  else location.hash = s;
+  const sel = a.dataset.scroll;
+  const t = sel === "top" ? 0 : $(sel === "work" ? "#hero" : sel);
+  lenis.scrollTo(t == null ? 0 : t, { duration: 1.3 });
 }));
-$$("[data-route='landing']").forEach(a => a.addEventListener("click", e => {
-  e.preventDefault();
-  if (!location.hash || location.hash === "#") showView("landing");
-  else location.hash = "";
-}));
-
-/* ── nav ── */
 $("#langToggle").addEventListener("click", () => { lang = lang === "en" ? "ar" : "en"; applyLang(); ST.refresh(); });
 $("#toTop").addEventListener("click", () => lenis.scrollTo(0, { duration: 1.4 }));
 
@@ -605,8 +570,6 @@ function revealSite() {
   const loader = $("#loader");
   if (loader) { loader.classList.add("dismiss"); setTimeout(() => { loader.style.display = "none"; }, 700); }
   buildReveals();
-  const lv = $("#landingVid");                          // start the landing cinematic once revealed
-  if (lv && !reduced && !document.body.classList.contains("show-work")) lv.play().catch(() => {});
 }
 function dismissLoader() {
   setTimeout(revealSite, 5000);                         // absolute safety — never trap the loader
@@ -621,7 +584,6 @@ function start() {
   // Render immediately from the bundled manifest, then dismiss the loader — the site
   // NEVER waits on the network. Supabase content is hydrated in the background below.
   buildMarquee(); applyLang(); initHero();
-  routeFromHash({ animate: false });                    // set landing/work with no transition on first paint
   dismissLoader();
   loadRemote().then(remote => {
     if (!remote) return;
