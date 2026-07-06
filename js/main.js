@@ -2,10 +2,10 @@
    curtain, wavy sine-driven photo streams, themed particle skies per section,
    radial camera hub, bilingual EN/AR with RTL, lightbox, custom cursor.
    Content is hydrated from Supabase (admin.html) with data.js as fallback. */
-import { PHOTOS, COLLECTIONS, SRC, REALW, I18N, SLIDES } from "./data.js?v=8";
-import { initHeroShow } from "./heroshow.js?v=8";
-import { initParticles } from "./particles.js?v=8";
-import { loadRemote } from "./remote.js?v=8";
+import { PHOTOS, COLLECTIONS, SRC, REALW, I18N, SLIDES } from "./data.js?v=9";
+import { initHeroShow } from "./heroshow.js?v=9";
+import { initParticles } from "./particles.js?v=9";
+import { loadRemote } from "./remote.js?v=9";
 
 const gsap = window.gsap, ST = window.ScrollTrigger;
 gsap.registerPlugin(ST);
@@ -78,10 +78,21 @@ function slideLabel(i) {
   $("#slideTotal").textContent = NUM(SLIDES.length);
   $("#slideTitle").textContent = pick(s, "title");
 }
+// the base <img> tracks the reel so the hero shows the right photo even if WebGL never draws
+function setHeroBase(i) {
+  const base = $("#heroBase"); if (!base) return;
+  const src = SLIDES[i].src;
+  if (base.getAttribute("src") === src) return;
+  base.style.transition = "opacity .6s var(--ease, ease)";
+  base.style.opacity = "0.35";
+  const swap = new Image();
+  swap.onload = () => { base.src = src; base.style.opacity = "1"; };
+  swap.src = src;
+}
 function initHero() {
   heroShow = initHeroShow($("#heroGL"), SLIDES, {
     reduced, interval: 5200,
-    onSlide: i => { curSlide = i; slideLabel(i); if (i > 0) flash(0.16); },
+    onSlide: i => { curSlide = i; slideLabel(i); setHeroBase(i); if (i > 0) flash(0.16); },
   });
   const hero = $(".hero");
   hero.addEventListener("click", e => {

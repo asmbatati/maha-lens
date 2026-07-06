@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Archivo:wght@300..700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Alexandria:wght@300..600&display=swap">
   <link rel="preload" as="image" href="img/product/ember-w1280.webp">
-  <link rel="stylesheet" href="css/main.css?v=8">
+  <link rel="stylesheet" href="css/main.css?v=9">
   <link rel="icon" type="image/png" sizes="48x48" href="favicon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -63,6 +63,8 @@
   <main id="top">
     <!-- HERO — pinned WebGL reel; the page curls over it savor-style -->
     <header class="hero" id="hero">
+      <!-- always-visible base photo; the WebGL canvas enhances it with the liquid reel when available -->
+      <img id="heroBase" class="hero-base" src="img/product/ember-w1280.webp?v=6" alt="Maha Lens — selected work" fetchpriority="high">
       <canvas id="heroGL"></canvas>
       <div class="hero-scrim" aria-hidden="true"></div>
       <div class="hero-ui">
@@ -157,6 +159,6 @@
     <button class="lb-btn lb-next" aria-label="Next photo"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 4l8 8-8 8" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   </div>
 
-  <script type="module" src="js/main.js?v=8"></script>
+  <script type="module" src="js/main.js?v=9"></script>
 </body>
 </html>

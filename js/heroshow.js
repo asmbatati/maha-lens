@@ -59,8 +59,9 @@ void main() {
 const easeInOut = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
 export function initHeroShow(canvas, slides, { onSlide, interval = 5200, reduced = false } = {}) {
-  const gl = canvas.getContext("webgl", { antialias: false, alpha: false })
-          || canvas.getContext("experimental-webgl");
+  // alpha:true so an undrawn/failed canvas stays transparent and the base <img> shows through
+  const gl = canvas.getContext("webgl", { antialias: false, alpha: true, premultipliedAlpha: false })
+          || canvas.getContext("experimental-webgl", { alpha: true });
   if (!gl) return initFallback(canvas, slides, { onSlide, interval, reduced });
 
   const prog = gl.createProgram();
