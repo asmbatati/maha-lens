@@ -1,22 +1,28 @@
 # Maha Lens · عدسة مها
 
-Photography portfolio for **Maha Omar** (مها عمر) — product & commercial, gourmet, and nature photography.
-*"The way the oryx sees — softly, and whole."*
+Photography portfolio for **Maha Omar** (مها عمر) — product & commercial, gourmet, nature, architecture, and event-coverage photography.
 
-A buildless, bilingual (English ⇄ Arabic / RTL) single-page site with a scroll-scrubbed cinematic hero.
+A buildless, bilingual (English ⇄ Arabic / RTL) **multi-page** site: a cinematic landing that opens into the portfolio, with a Supabase CMS so Maha can manage it from her phone. **Live at [maha-lens.vercel.app](https://maha-lens.vercel.app)**.
+
+## Pages
+
+- **`index.html`** — landing: a full-screen lens cinematic (video, with a poster fallback so a frame always shows) + brand + "View the work".
+- **`work.html`** — the portfolio: WebGL photo hero, wavy spotlight galleries, About, Contact, camera hub, lightbox. **Home** link returns to the landing.
+- **`admin.html`** — Maha's phone-first CMS (Supabase auth + storage).
+
+Cross-page navigation uses the browser's `@view-transition` for an animated crossfade where supported.
 
 ## Stack
 
-- Plain **HTML + CSS + ES modules** — no build step.
-- **Supabase CMS** — photos/collections/copy hydrate from Supabase (`js/remote.js`, `data.js` fallback); `admin.html` is Maha's phone-first panel (RLS-locked writes, EXIF-stripping + auto-orienting webp uploads, suspendable sections). Lives in the shared **"Personal Websites"** Supabase project (`pvconwkeshzoovchvzqm`) — this site owns the `maha_photos` / `maha_collections` / `maha_site_copy` tables, the `maha_is_admin()` helper, and the `photos` storage bucket (bucket keeps its legacy un-prefixed name because photo rows embed absolute public URLs).
-- **Per-section moods** — silk `#cb997e` with falling flacons (Product), sage `#6b705c` with tumbling fruit (Gourmet), cream `#fff9eb` with petals (Nature), sand `#ddbea9` with floating calligraphy (Architecture), velvet bokeh (Coverage) — plus a themed companion line weaving through each stream with a traveler that rides the scroll.
-- **Raw WebGL hero reel** (`js/heroshow.js`) — liquid-displacement crossfades between her photographs, cover-fit + in-shader Ken-Burns, `<img>` crossfade fallback. The page rises over the pinned hero behind a **curved curtain edge** (savor.it-style).
-- **Wavy spotlight streams** — each collection is a column of photos drifting on three layered sine waves with clip-path reveals (GSAP ScrollTrigger per image, config in `WAVE`).
-- **Celestial layer** (`js/celestial.js`) — glitter twinkles, four-point glints, and falling stars **behind the photos** (sticky canvas inside the page body); camera-flash accents on load / slide change / lightbox.
-- [GSAP](https://gsap.com/) 3.12 + ScrollTrigger + [Lenis](https://lenis.darkroom.engineering/) 1.1 — smooth scroll, progress bar, velocity-leaning marquee, giant letter-built closing logotype.
-- **Gloock** display serif, glowing like the stars (em-scaled layered text-shadow) + Archivo · Amiri + Alexandria (Arabic).
-- Candlelight-dark aesthetic: espresso `#0f0c0a`, champagne gold `#d9a95f`, warm ivory, brand blush `#edafb8`.
-- Accessible lightbox (keyboard, RTL-aware arrows, swipe, focus trap), bilingual marquee.
+- Plain **HTML + CSS + ES modules** — no build step, no npm.
+- [GSAP](https://gsap.com/) 3.12 + ScrollTrigger + [Lenis](https://lenis.darkroom.engineering/) 1.1 — smooth scroll, reveals, the wavy streams, marquee.
+- **Supabase CMS** — photos/collections/copy hydrate from Supabase at runtime (`js/remote.js`, `js/data.js` is the offline fallback). Project `pvconwkeshzoovchvzqm`; tables `maha_photos` / `maha_collections` / `maha_site_copy`; public `photos` storage bucket. **RLS-locked** writes (admin emails only). `admin.html` uploads auto-orient, strip all metadata, and emit the three webp tiers.
+- **WebGL hero reel** (`js/heroshow.js`) — liquid-melt crossfades between her photographs over an always-visible base `<img>`; an absolute `goTo(i)` keeps the reel synced to the base (no flashing). Cover-fit + in-shader Ken-Burns; `<img>`-crossfade fallback with no WebGL.
+- **Wavy spotlight streams** — each collection is a column of photos drifting on three layered sine waves with clip-path reveals (per-image ScrollTrigger). Large on desktop, scaled down on phones.
+- **Per-section moods** (`js/particles.js`) — silk `#cb997e` + falling flacons (Product), sage `#6b705c` + tumbling fruit (Gourmet), cream `#fff9eb` + petals (Nature), sand `#ddbea9` + floating calligraphy (Architecture), velvet + bokeh (Coverage); each with a themed companion line that a traveler rides on scroll.
+- **Type:** Gloock (display serif, glowing) + Archivo · Amiri + Alexandria (Arabic).
+- **Aesthetic:** candlelight & starlight — espresso `#0f0c0a`, champagne gold `#d9a95f`, warm ivory, brand blush `#edafb8`.
+- Accessible lightbox (keyboard, RTL-aware arrows, swipe, focus trap), bilingual marquee, camera-aperture section hub.
 
 ## Run locally
 
@@ -25,17 +31,25 @@ python -m http.server 4178
 # open http://localhost:4178
 ```
 
+(ES modules require HTTP — `file://` will fail to load `js/*.js`.)
+
 ## Structure
 
 ```
-index.html          markup + content
-css/main.css         all styles (light palette, RTL rules)
-js/main.js           render, i18n EN/AR toggle, Lenis + GSAP reveals, custom cursor
-js/cinematic.js      scroll-scrubbed Ken-Burns hero engine
-js/data.js           collections, photo manifest, bilingual strings
-img/                 optimized webp galleries + brand mark + hero
-favicon*.png         brand favicon
+index.html · work.html · admin.html   the three pages
+css/main.css        all styles (dark palette, landing, hero, wave, per-section themes, RTL)
+js/main.js          work-page app: render, i18n EN/AR, hero driver, wave, hub, lightbox
+js/heroshow.js      WebGL liquid-melt hero slideshow (+ base-image sync, fallback)
+js/particles.js     themed particle skies (stars/embers/petals/calligraphy/bokeh/…)
+js/landing.js       landing script (bilingual, starfield, plays the cinematic)
+js/data.js          fallback manifest: photos, 5 collections, SLIDES, bilingual strings
+js/remote.js        Supabase fetch (→ data.js fallback) · js/config.js  connection
+js/admin.js         CMS logic (RLS-locked uploads/edits)
+img/                webp galleries + fx/ (sprites + textures) · video/  cinematic + reveal clips
+vercel.json         no-store on the HTML pages
 ```
+
+Cache-busting: JS/CSS carry `?v=N` (bumped per change); images use `?v=6` (bumped on in-place re-encodes).
 
 ## Credits
 
