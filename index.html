@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Archivo:wght@300..700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Alexandria:wght@300..600&display=swap">
   <link rel="preload" as="image" href="video/landing-hero-poster.webp">
-  <link rel="stylesheet" href="css/main.css?v=14">
+  <link rel="stylesheet" href="css/main.css?v=15">
   <link rel="icon" type="image/png" sizes="48x48" href="favicon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -47,9 +47,11 @@
 
   <!-- LANDING — the lens cinematic -->
   <section class="landing" id="landing">
-    <video id="landingVid" class="landing-vid" muted loop autoplay playsinline preload="auto" poster="video/landing-hero-poster.webp" aria-hidden="true">
-      <source src="video/landing-hero.webm" type="video/webm">
-      <source src="video/landing-hero.mp4" type="video/mp4">
+    <!-- always-visible poster still; the video fades in over it once it plays -->
+    <img class="landing-poster" src="video/landing-hero-poster.webp?v=15" alt="Maha Lens — through the lens" fetchpriority="high">
+    <video id="landingVid" class="landing-vid" muted loop autoplay playsinline preload="auto" poster="video/landing-hero-poster.webp?v=15" aria-hidden="true">
+      <source src="video/landing-hero.mp4?v=15" type="video/mp4">
+      <source src="video/landing-hero.webm?v=15" type="video/webm">
     </video>
     <div class="landing-scrim" aria-hidden="true"></div>
     <div class="landing-inner">
@@ -62,6 +64,6 @@
     <a class="landing-scroll" href="work.html" aria-label="View the work"><span data-i18n="scroll">Scroll</span><i></i></a>
   </section>
 
-  <script type="module" src="js/landing.js?v=14"></script>
+  <script type="module" src="js/landing.js?v=15"></script>
 </body>
 </html>

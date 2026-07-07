@@ -1,7 +1,7 @@
 /* Maha Lens — landing page. Full-screen lens cinematic (video) with the brand,
    leading into work.html. Bilingual; a light starfield drifts over the video. */
-import { I18N } from "./data.js?v=14";
-import { initParticles } from "./particles.js?v=14";
+import { I18N } from "./data.js?v=15";
+import { initParticles } from "./particles.js?v=15";
 
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $ = s => document.querySelector(s);
@@ -28,7 +28,10 @@ initParticles($("#stars"), { mode: "stars", reduced });
    gesture — so it starts the moment the browser lets it. ── */
 const vid = $("#landingVid");
 if (vid && !reduced) {
-  const play = () => { const p = vid.play(); if (p && p.catch) p.catch(() => {}); };
+  const show = () => vid.classList.add("playing");     // fade the video in over the poster
+  const play = () => { const p = vid.play(); if (p && p.then) p.then(show).catch(() => {}); };
+  vid.addEventListener("playing", show);               // definitive: it's actually moving
+  vid.addEventListener("timeupdate", () => { if (vid.currentTime > 0) show(); }, { once: true });
   play();
   vid.addEventListener("canplay", play, { once: true });
   vid.addEventListener("loadeddata", play, { once: true });
@@ -36,4 +39,6 @@ if (vid && !reduced) {
   const kick = () => { play(); if (!vid.paused) off(); };
   const off = () => ["pointerdown", "touchstart", "scroll", "keydown"].forEach(ev => removeEventListener(ev, kick));
   ["pointerdown", "touchstart", "scroll", "keydown"].forEach(ev => addEventListener(ev, kick, { passive: true }));
+} else if (vid) {
+  vid.classList.add("playing");   // reduced-motion: just show the first frame statically
 }

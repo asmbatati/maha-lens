@@ -2,10 +2,10 @@
    curtain, wavy sine-driven photo streams, themed particle skies per section,
    radial camera hub, bilingual EN/AR with RTL, lightbox, custom cursor.
    Content is hydrated from Supabase (admin.html) with data.js as fallback. */
-import { PHOTOS, COLLECTIONS, SRC, REALW, I18N, SLIDES } from "./data.js?v=14";
-import { initHeroShow } from "./heroshow.js?v=14";
-import { initParticles } from "./particles.js?v=14";
-import { loadRemote } from "./remote.js?v=14";
+import { PHOTOS, COLLECTIONS, SRC, REALW, I18N, SLIDES } from "./data.js?v=15";
+import { initHeroShow } from "./heroshow.js?v=15";
+import { initParticles } from "./particles.js?v=15";
+import { loadRemote } from "./remote.js?v=15";
 
 const gsap = window.gsap, ST = window.ScrollTrigger;
 gsap.registerPlugin(ST);
