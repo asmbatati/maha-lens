@@ -2,10 +2,10 @@
    curtain, wavy sine-driven photo streams, themed particle skies per section,
    radial camera hub, bilingual EN/AR with RTL, lightbox, custom cursor.
    Content is hydrated from Supabase (admin.html) with data.js as fallback. */
-import { PHOTOS, COLLECTIONS, SRC, REALW, I18N, SLIDES } from "./data.js?v=13";
-import { initHeroShow } from "./heroshow.js?v=13";
-import { initParticles } from "./particles.js?v=13";
-import { loadRemote } from "./remote.js?v=13";
+import { PHOTOS, COLLECTIONS, SRC, REALW, I18N, SLIDES } from "./data.js?v=14";
+import { initHeroShow } from "./heroshow.js?v=14";
+import { initParticles } from "./particles.js?v=14";
+import { loadRemote } from "./remote.js?v=14";
 
 const gsap = window.gsap, ST = window.ScrollTrigger;
 gsap.registerPlugin(ST);
@@ -192,7 +192,7 @@ function bindRevealVideos() {
 }
 function updateSpotlightSizes() {
   const sizeFactor = Math.min(innerWidth / 620, 1);
-  const mobileMul = innerWidth < 640 ? 0.66 : 1;   // photos are large on desktop, smaller on phones
+  const mobileMul = innerWidth < 640 ? 0.60 : 1;   // photos are large on desktop, a touch smaller on phones
   $$(".sp-item").forEach(item => {
     const ar = +item.dataset.ar, k = +item.dataset.k, n = +item.dataset.n;
     // reference shrink: the last quarter of each stream tapers down to 50%

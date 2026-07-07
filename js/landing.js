@@ -1,7 +1,7 @@
 /* Maha Lens — landing page. Full-screen lens cinematic (video) with the brand,
    leading into work.html. Bilingual; a light starfield drifts over the video. */
-import { I18N } from "./data.js?v=13";
-import { initParticles } from "./particles.js?v=13";
+import { I18N } from "./data.js?v=14";
+import { initParticles } from "./particles.js?v=14";
 
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $ = s => document.querySelector(s);
@@ -22,17 +22,18 @@ applyLang();
 /* ── starfield over the cinematic ── */
 initParticles($("#stars"), { mode: "stars", reduced });
 
-/* ── make sure the cinematic plays (muted autoplay is allowed); fade it in once it
-   actually starts so the poster carries the frame until then — never a black gap ── */
+/* ── make the cinematic play. Muted autoplay is usually allowed, but some phones
+   block it (iOS Low Power, data-saver). The video is always visible (poster frame
+   until it plays), and we retry on load, on visibility, and on the FIRST user
+   gesture — so it starts the moment the browser lets it. ── */
 const vid = $("#landingVid");
-if (vid) {
-  const show = () => vid.classList.add("playing");
-  if (!reduced) {
-    const play = () => vid.play().then(show).catch(() => {});
-    play();
-    vid.addEventListener("canplay", play, { once: true });
-    vid.addEventListener("playing", show);
-    document.addEventListener("visibilitychange", () => { if (!document.hidden) play(); });
-    setTimeout(() => { if (vid.paused) vid.play().then(show).catch(() => {}); }, 800);  // retry once
-  }
+if (vid && !reduced) {
+  const play = () => { const p = vid.play(); if (p && p.catch) p.catch(() => {}); };
+  play();
+  vid.addEventListener("canplay", play, { once: true });
+  vid.addEventListener("loadeddata", play, { once: true });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) play(); });
+  const kick = () => { play(); if (!vid.paused) off(); };
+  const off = () => ["pointerdown", "touchstart", "scroll", "keydown"].forEach(ev => removeEventListener(ev, kick));
+  ["pointerdown", "touchstart", "scroll", "keydown"].forEach(ev => addEventListener(ev, kick, { passive: true }));
 }
