@@ -1,7 +1,7 @@
 /* Maha Lens — landing page. Full-screen lens cinematic (video) with the brand,
    leading into work.html. Bilingual; a light starfield drifts over the video. */
-import { I18N } from "./data.js?v=15";
-import { initParticles } from "./particles.js?v=15";
+import { I18N } from "./data.js?v=16";
+import { initParticles } from "./particles.js?v=16";
 
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $ = s => document.querySelector(s);
