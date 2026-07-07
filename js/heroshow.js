@@ -148,18 +148,27 @@ export function initHeroShow(canvas, slides, { onSlide, interval = 5200, reduced
     requestAnimationFrame(draw);
   }
 
-  async function goto(i) {
-    if (animating || dead) return;
-    nxt = (i + slides.length) % slides.length;
-    if (nxt === cur) return;
-    const t = await loadTex(nxt);
-    if (!t) { nxt = cur; return; }
-    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, t);
-    animStart = performance.now(); animating = true;
-    onSlide && onSlide(nxt);
-    loadTex((nxt + 1) % slides.length);        // prefetch the one after
+  // Transition to an ABSOLUTE slide index. If a melt is already running (or the
+  // draw loop is frozen so it never finishes), SNAP straight to slide i instead —
+  // so the reel can never be melting toward a different slide than main asked for
+  // (that mismatch was the "intermediate flash of another image").
+  async function goTo(i) {
+    if (dead) return;
+    i = ((i % slides.length) + slides.length) % slides.length;
+    const t = await loadTex(i);
+    if (!t || dead) return;
+    if (animating || i === cur) {                // busy/same → snap, no cross-melt
+      cur = i; nxt = i; animating = false; prog01 = 0;
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, t);
+    } else {                                     // clean liquid melt cur → i
+      nxt = i;
+      gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, t);
+      animStart = performance.now(); animating = true;
+    }
+    onSlide && onSlide(i);
+    loadTex((i + 1) % slides.length);            // prefetch the next
   }
-  // auto-advance is owned by main.js (a reliable plain setInterval); heroShow just renders.
   loadTex(0).then(t0 => {
     if (!t0 || dead) return;
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, t0);
@@ -170,8 +179,9 @@ export function initHeroShow(canvas, slides, { onSlide, interval = 5200, reduced
   });
 
   return {
-    next: () => goto(cur + 1),
-    prev: () => goto(cur - 1),
+    goTo,
+    next: () => goTo(cur + 1),
+    prev: () => goTo(cur - 1),
     destroy: () => { dead = true; clearInterval(timer); },
   };
 }
@@ -181,7 +191,7 @@ export function initHeroShow(canvas, slides, { onSlide, interval = 5200, reduced
 function initFallback(canvas, slides, { onSlide }) {
   canvas.style.display = "none";
   let cur = 0;
-  const goto = i => { const n = (i + slides.length) % slides.length; if (n === cur) { return; } cur = n; onSlide && onSlide(n); };
+  const goTo = i => { const n = ((i % slides.length) + slides.length) % slides.length; if (n === cur) return; cur = n; onSlide && onSlide(n); };
   onSlide && onSlide(0);
-  return { next: () => goto(cur + 1), prev: () => goto(cur - 1), destroy: () => {} };
+  return { goTo, next: () => goTo(cur + 1), prev: () => goTo(cur - 1), destroy: () => {} };
 }

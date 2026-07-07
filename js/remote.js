@@ -1,6 +1,6 @@
 /* Remote manifest — photos / collections / copy managed by Maha via admin.html.
    Falls back to the bundled data.js manifest when offline or slow. */
-import { SUPA_URL, SUPA_KEY } from "./config.js?v=12";
+import { SUPA_URL, SUPA_KEY } from "./config.js?v=13";
 
 const HEADERS = { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` };
 const q = path => fetch(`${SUPA_URL}/rest/v1/${path}`, { headers: HEADERS })

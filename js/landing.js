@@ -1,7 +1,7 @@
 /* Maha Lens — landing page. Full-screen lens cinematic (video) with the brand,
    leading into work.html. Bilingual; a light starfield drifts over the video. */
-import { I18N } from "./data.js?v=12";
-import { initParticles } from "./particles.js?v=12";
+import { I18N } from "./data.js?v=13";
+import { initParticles } from "./particles.js?v=13";
 
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $ = s => document.querySelector(s);
@@ -22,11 +22,17 @@ applyLang();
 /* ── starfield over the cinematic ── */
 initParticles($("#stars"), { mode: "stars", reduced });
 
-/* ── make sure the cinematic plays (muted autoplay is allowed) ── */
+/* ── make sure the cinematic plays (muted autoplay is allowed); fade it in once it
+   actually starts so the poster carries the frame until then — never a black gap ── */
 const vid = $("#landingVid");
-if (vid && !reduced) {
-  const play = () => vid.play().catch(() => {});
-  play();
-  vid.addEventListener("canplay", play, { once: true });
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) play(); });
+if (vid) {
+  const show = () => vid.classList.add("playing");
+  if (!reduced) {
+    const play = () => vid.play().then(show).catch(() => {});
+    play();
+    vid.addEventListener("canplay", play, { once: true });
+    vid.addEventListener("playing", show);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) play(); });
+    setTimeout(() => { if (vid.paused) vid.play().then(show).catch(() => {}); }, 800);  // retry once
+  }
 }

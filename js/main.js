@@ -2,10 +2,10 @@
    curtain, wavy sine-driven photo streams, themed particle skies per section,
    radial camera hub, bilingual EN/AR with RTL, lightbox, custom cursor.
    Content is hydrated from Supabase (admin.html) with data.js as fallback. */
-import { PHOTOS, COLLECTIONS, SRC, REALW, I18N, SLIDES } from "./data.js?v=12";
-import { initHeroShow } from "./heroshow.js?v=12";
-import { initParticles } from "./particles.js?v=12";
-import { loadRemote } from "./remote.js?v=12";
+import { PHOTOS, COLLECTIONS, SRC, REALW, I18N, SLIDES } from "./data.js?v=13";
+import { initHeroShow } from "./heroshow.js?v=13";
+import { initParticles } from "./particles.js?v=13";
+import { loadRemote } from "./remote.js?v=13";
 
 const gsap = window.gsap, ST = window.ScrollTrigger;
 gsap.registerPlugin(ST);
@@ -78,15 +78,15 @@ function slideLabel(i) {
   $("#slideTotal").textContent = NUM(SLIDES.length);
   $("#slideTitle").textContent = pick(s, "title");
 }
-// the base <img> tracks the reel so the hero shows the right photo even if WebGL never draws
+// the base <img> tracks the reel so the hero shows the right photo even if WebGL never
+// draws. Preload then swap in place — NO opacity dip (which briefly revealed the layer
+// underneath and read as a flash of a different image).
 function setHeroBase(i) {
   const base = $("#heroBase"); if (!base) return;
   const src = SLIDES[i].src;
   if (base.getAttribute("src") === src) return;
-  base.style.transition = "opacity .6s var(--ease, ease)";
-  base.style.opacity = "0.35";
   const swap = new Image();
-  swap.onload = () => { base.src = src; base.style.opacity = "1"; };
+  swap.onload = () => { base.src = src; };
   swap.src = src;
 }
 let heroTimer = null, heroIdx = 0;
@@ -97,7 +97,7 @@ let heroTimer = null, heroIdx = 0;
 function heroGo(i) {
   heroIdx = ((i % SLIDES.length) + SLIDES.length) % SLIDES.length;
   curSlide = heroIdx; slideLabel(heroIdx); setHeroBase(heroIdx);
-  heroShow && heroShow.next();
+  heroShow && heroShow.goTo(heroIdx);   // WebGL targets the SAME slide as the base — no flash
 }
 function initHero() {
   heroShow = initHeroShow($("#heroGL"), SLIDES, { reduced, onSlide: () => {} });
@@ -192,13 +192,14 @@ function bindRevealVideos() {
 }
 function updateSpotlightSizes() {
   const sizeFactor = Math.min(innerWidth / 620, 1);
+  const mobileMul = innerWidth < 640 ? 0.66 : 1;   // photos are large on desktop, smaller on phones
   $$(".sp-item").forEach(item => {
     const ar = +item.dataset.ar, k = +item.dataset.k, n = +item.dataset.n;
     // reference shrink: the last quarter of each stream tapers down to 50%
     const shrinkStart = Math.floor(n * 0.75);
     const shrinkFactor = (n >= 4 && k >= shrinkStart)
       ? (k - shrinkStart + 1) / (n - shrinkStart) : 0;
-    const h = BASE_H * (ar < 1 ? 1.3 : 1) * sizeFactor * (1 - shrinkFactor * 0.5);
+    const h = BASE_H * (ar < 1 ? 1.3 : 1) * sizeFactor * mobileMul * (1 - shrinkFactor * 0.5);
     const w = h * ar;
     item.style.height = `${Math.round(h)}px`;
     item.style.width = `${Math.round(w)}px`;
